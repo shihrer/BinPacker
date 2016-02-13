@@ -54,6 +54,9 @@ RETURNS: a list of tuples that designate the top left corner placement,
          y1 = top left y coordinate of rectangle 1 placement, etc.
 """
 
+
 def find_solution(rectangles):
+    sortedRectangles = sorted(rectangles, reverse = True)
+
     return find_naive_solution(rectangles)  # a working example!
 
