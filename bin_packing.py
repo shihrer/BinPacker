@@ -56,7 +56,51 @@ RETURNS: a list of tuples that designate the top left corner placement,
 
 
 def find_solution(rectangles):
-    sortedRectangles = sorted(rectangles, reverse = True)
+    sortedRectangles = []
+    #Add original index location to rectangles
+    for i, rectangle in enumerate(rectangles):
+        testTuple = rectangle + (i,)
+        sortedRectangles.append(testTuple)
+    sortedRectangles = sorted(sortedRectangles, key=getHeightKey, reverse = True)
 
-    return find_naive_solution(rectangles)  # a working example!
+    # Root node is first node in sorted list.
+    rootNode = Node(sortedRectangles[0])
 
+    # GO through each rectangle in sorted list and find a space for it to fit into.
+    # for rectangle in sortedRectangles:
+    #
+    #     if findSpace(rootNode, rectangle):
+    #         #Found space, cut remaining white space in two and save to tree
+    #         cutSpace()
+    #     else:
+    #         #Space not found.  Grow our rectangle to accommodate.
+    #         increaseSpace()
+
+    originalOrderRectangles = sorted(sortedRectangles, key=getOriginalIndexKey)
+    return None
+
+#Recursively search through tree to find space for new rectangle
+def findSpace(root, rectangle):
+    if(root.rect != None):
+        return findSpace(root.right, rectangle)
+    return None
+
+def cutSpace():
+    return None
+
+def increaseSpace():
+    return None
+
+def getOriginalIndexKey(item):
+    return item[2]
+
+def getHeightKey(item):
+    return item[1]
+
+
+
+class Node:
+    def __init__(self, val):
+        self.left = None
+        self.right = None
+        self.rect = val
