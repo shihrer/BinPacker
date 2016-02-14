@@ -85,6 +85,8 @@ def findSpace(root, rectangle):
         return findSpace(root.right, rectangle)
     return None
 
+
+
 def cutSpace():
     return None
 
@@ -100,7 +102,16 @@ def getHeightKey(item):
 
 
 class Node:
-    def __init__(self, val):
+    def __init__(self, val, x=0, y=0):
         self.left = None
         self.right = None
         self.rect = val
+        self.x = x
+        self.y = y
+
+def split(self, rectangle):
+    self.used = True
+    node_down = Node(self.w, self.h-rectangle.h, self.x, self.y + rectangle.y)
+    node_right = Node(self.w-rectangle.w, rectangle.h, self.x+rectangle.w, self.y)
+
+    return node_down, node_right
