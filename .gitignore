@@ -14,6 +14,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+/.idea/misc.xml
 eggs/
 .eggs/
 lib/
