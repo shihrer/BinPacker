@@ -46,7 +46,8 @@ def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
         
     file.close()
 
-generate_file("squares.txt", 1, 1000, 2500)
+# generate_file("squares.txt", 1, 1000, 2500)
+generate_file("squares.txt", 1, 10, 10)
 
 # -----------------------------------------------
 
