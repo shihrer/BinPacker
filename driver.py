@@ -47,7 +47,7 @@ def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
     file.close()
 
 # generate_file("squares.txt", 1, 1000, 2500)
-generate_file("squares.txt", 1, 1000, 20)
+generate_file("squares.txt", 1, 1000, 8000)
 
 # -----------------------------------------------
 
@@ -288,7 +288,7 @@ def solve_problem(file_name):
         print("Bounding Rectangle Perimeter of Your Solution =", perimeter)
         if time_elapsed > 5.0:                      # is student solution fast enough?
             print("Error.  Time Limit Exceeded.")
-            perimeter = 2 * naive_perimeter         # answer is penalized
+            # perimeter = 2 * naive_perimeter         # answer is penalized
         
     else:
         print("Error.  Overlapping Rectangles in Solution.")
