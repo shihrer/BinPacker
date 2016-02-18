@@ -90,7 +90,7 @@ def find_solution(rectangles):
     # Create tree
     binTree = Tree()
     # arbitrary size, need to make it dynamic
-    binTree.root = Node((10000000000,10000000000),(0,0))
+    binTree.root = Node((550,550),(0,0))
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
@@ -101,11 +101,11 @@ def find_solution(rectangles):
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4
     # Might not need to do this...
-    results = []
+    resultTuples = []
     for resultTuple in resultsInOriginalOrder:
-        results.append((resultTuple[3], resultTuple[4]))
+        resultTuples.append((resultTuple[3], resultTuple[4]))
 
-    return results
+    return resultTuples
 
 
 # Functions necessary for ordering the tuples
@@ -138,11 +138,16 @@ class Tree:
 
     def findSpace(self, currentNode, rectangle):
         # Replace recursion with iteration
-        while not currentNode.isEmpty:
-            if currentNode.rectTuple[1] < rectangle[1]:
-                currentNode = currentNode.rightChild
+        while currentNode is not None:
+            if not currentNode.isEmpty:
+                if currentNode.rectTuple[1] > rectangle[1]:
+                    currentNode = currentNode.rightChild
+                else:
+                    currentNode = currentNode.leftChild
+            elif (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
+                return currentNode
             else:
-                currentNode = currentNode.leftChild
+                currentNode = None
 
         # Save time by ignoring nodes that have been filled
         # for emptyNode in self.emptyNodes:
@@ -150,9 +155,6 @@ class Tree:
         #         currentNode = currentNode.rightChild
         #     else:
         #         currentNode = currentNode.leftChild
-
-        if rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-            return currentNode
 
         # if not currentNode.isEmpty:
         #     if currentNode.rectTuple[1] < rectangle[1]:
@@ -162,7 +164,7 @@ class Tree:
         # elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
         #     return currentNode
 
-        return None
+        return currentNode
 
 
 # Node represents "space"
@@ -183,7 +185,7 @@ class Node:
 
         # Sizes for children
         newLeftDimen = (self.rectTuple[0], self.rectTuple[1] - rect[1])
-        newRightDimen = (self.rectTuple[0] - rect[0], self.rectTuple[1])
+        newRightDimen = (self.rectTuple[0] - rect[0], rect[1])
 
         # Starting coordinates for children
         newLeftCoords = (self.coordinates[0], self.coordinates[1] + rect[1])
