@@ -103,7 +103,7 @@ def find_solution(rectangles):
     # Might not need to do this...
     resultTuples = []
     for resultTuple in resultsInOriginalOrder:
-        resultTuples.append((resultTuple[3], resultTuple[4]))
+        resultTuples.append((resultTuple[3], -resultTuple[4]))
 
     return resultTuples
 
