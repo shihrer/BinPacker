@@ -173,6 +173,7 @@ class Tree:
             return self.growTreeDown(rectangle)
         else:
             return self.growTreeRight(rectangle)
+
         return None
 
 
@@ -183,7 +184,7 @@ class Tree:
         newRoot.leftChild = self.root
 
         newRightChildSize = (rectangle[0], self.root.rectTuple[1])
-        newRightChildCoords = (self.root.rectTuple[0] + rectangle[0], 0)
+        newRightChildCoords = (self.root.rectTuple[0], 0)
         newRoot.rightChild = Node(newRightChildSize, newRightChildCoords)
 
         self.root = newRoot
@@ -199,7 +200,7 @@ class Tree:
         newRoot.rightChild = self.root
 
         newLeftChildSize = (self.root.rectTuple[0], rectangle[1])
-        newLeftChildCoords = (0, self.root.rectTuple[1] + rectangle[1], rectangle[2])
+        newLeftChildCoords = (0, self.root.rectTuple[1], rectangle[2])
         newRoot.leftChild = Node(newLeftChildSize, newLeftChildCoords)
 
         self.root = newRoot
