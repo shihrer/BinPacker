@@ -57,26 +57,47 @@ RETURNS: a list of tuples that designate the top left corner placement,
 """
 
 
+# ------------------------------------------------------
+#           CSCI 338, Bin Packing Assignment
+#             Michael Shihrer, Jake Morison
+#                   19 February 2016
+# ------------------------------------------------------
+#                 Solution Explanation
+# ------------------------------------------------------
+# First, the original order of the rectangle tuples must be saved.
+#   This is necessary in order to return the results list in the original order.
+# After, the rectangle tuples are sorted in decreasing order.
+#   This means that the first item in the list is the "largest"
+#       Followed by the next largest, down to the smallest.
+#   Largest is determined by heuristics.
+#       Experimented with width, height, area, perimeter, max(w,h).
+# We use a binary tree to represent the "space" available to place items.
+#   The root node represents the total size of our working space.
+#       Starting size just needs to be large enough to contain the first item.
+# For every rectangle tuple, we find an empty node large enough to fit it.
+# If a node is found, child nodes are created based off the remaining space.
+#   The left node represents space "below" the previously placed rectangle.
+#   The right node represents space "next" to the previously placed rectangle.
+# If no nodes are found that can fit a new node, we create more "space"
+#   We use heuristics to guess the best way to increase space.
+#   Increasing space creates a new root node for the tree.
+#   If space is added to the right of "full" space.
+#       New space is added as a right child.
+#       Otherwise, new space is added as a left child.
+# This process is continued for every rectangle.
+# ------------------------------------------------------
+#            Benefits to this solution
+# ------------------------------------------------------
+#   Sorting increases the efficiency of the solution greatly.
+#   Overlapping is never a concern.  It is impossible, actually.
+#   As we place larger blocks, area for smaller blocks is created.
+#   After a certain point, most small blocks can be placed without increasing our working area.
+# ------------------------------------------------------
+#                   Obstacles
+# ------------------------------------------------------
+# Recursion is slow.
+# ------------------------------------------------------
 def find_solution(rectangles):
-    # How this solution works:
-    # First, the original order of the rectangle tuples must be saved.
-    #   This is necessary in order to return the results list in the original order.
-    # After, the rectangle tuples are sorted in decreasing order.
-    #   This means that the first item in the list is the "largest", followed by the next largest, down to the smallest.
-    #   Largest is determined by heuristics.
-    #       Experimented with width, height, area, perimeter, max(w,h)
-    # We use a binary tree to represent the "space" available to place items.
-    #   The root node is an arbitrary size that's large enough to fit the first item
-    #       Starting size just needs to be large enough to contain the first item.
-    #       Can be as big or small as that is necessary.
-    # After an item is placed in the tree, that node is "used".
-    # Once a node is used, child nodes are created based off the remaining space.
-    #   The left node represents space "below" the previously placed rectangle.
-    #   The right node represents space "next" to the previously placed rectangle.
-    # This process is continued for every rectangle.
-    # If no nodes are found that can fit a new node, we create more "space"
-    #   We guess if it's best to place the new node below or next to the
-
     sortedRectangles = []
     # Add original index location to rectangles - necessary for putting tuples back in order for results
     for i, rectangle in enumerate(rectangles):
@@ -89,8 +110,7 @@ def find_solution(rectangles):
 
     # Create tree
     binTree = Tree()
-    # arbitrary size, need to make it dynamic
-    binTree.root = Node(sortedRectangles[0],(0,0))
+
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
@@ -99,8 +119,8 @@ def find_solution(rectangles):
     # Build results list
     resultsInOriginalOrder = sorted(results, key=getOriginalIndexKey)
 
-    # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4
-    # Might not need to do this...
+    # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
+    # Make sure to set the "y" coordinate to be negative.
     resultTuples = []
     for resultTuple in resultsInOriginalOrder:
         resultTuples.append((resultTuple[3], -resultTuple[4]))
@@ -109,35 +129,33 @@ def find_solution(rectangles):
 
 
 # Functions necessary for ordering the tuples
+def getHeightKey(item):
+    return item[1]
+
+
 def getOriginalIndexKey(item):
     return item[2]
 
-
-def getHeightKey(item):
-    return item[1]
 
 # Tree class for containing nodes and functions to manipulate the nodes
 class Tree:
     def __init__(self):
         self.root = None
-        self.emptyNodes = []
 
     def add(self, rectangle):
-        currentNode = None
-        if self.root is None:
-            self.root = Node(rectangle, (0, 0))
-            self.root.isEmpty = False
-            self.root.splitSpace(rectangle)
-            currentNode = self.root
+        currentNode = None                                      # Setup variable to return answer.
+        if self.root is None:                                   # Check to see if we have initialized root node
+            self.root = Node(rectangle, (0, 0))                 # Root node originates at(0,0).
+            self.root.splitSpace(rectangle)                     # Create space for next root.
+            currentNode = self.root                             # Place answer in this root.
         else:
-            currentNode = self.findSpace(self.root, rectangle)
-            if currentNode is not None:
-                currentNode.splitSpace(rectangle)
+            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
+            if currentNode is not None:                         # Check to see if space was found.
+                currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
-                # grow
-                currentNode = self.growTree(rectangle)
+                currentNode = self.growTree(rectangle)          # No space found.  Add more.
 
-        return currentNode
+        return currentNode                                      # Return answer.
 
     def findSpace(self, currentNode, rectangle):
         # Replace recursion with iteration
@@ -159,27 +177,30 @@ class Tree:
         #     else:
         #         currentNode = currentNode.leftChild
 
+        # Recursively check our tree - optimize to be iterative.
         if not currentNode.isEmpty:
             return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-            # return self.findSpace(currentNode.leftChild, rectangle)
         elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
             return currentNode
 
+        # Uh oh, something really broke if you don't return something.
         return None
 
+    # Heuristic function for determining best way to add empty space.
     def growTree(self, rectangle):
-
+        # These two checks attempt to keep the working area square.
         if self.root.rectTuple[1] < self.root.rectTuple[0]:
             return self.growTreeDown(rectangle)
         else:
             return self.growTreeRight(rectangle)
 
-        return None
-
-
+    # Pretty boring functions.
+    # Create new root nodes.
+    # Swap in new root.
+    # Put old root in proper child.
     def growTreeRight(self, rectangle):
         newRootDimensions = (self.root.rectTuple[0] + rectangle[0], self.root.rectTuple[1])
-        newRoot = Node(newRootDimensions,(0,0))
+        newRoot = Node(newRootDimensions, (0, 0))
         newRoot.isEmpty = False
         newRoot.leftChild = self.root
 
@@ -192,10 +213,9 @@ class Tree:
 
         return self.root.rightChild
 
-
     def growTreeDown(self, rectangle):
         newRootDimensions = (self.root.rectTuple[0], self.root.rectTuple[1] + rectangle[1])
-        newRoot = Node(newRootDimensions,(0,0))
+        newRoot = Node(newRootDimensions, (0, 0))
         newRoot.isEmpty = False
         newRoot.rightChild = self.root
 
@@ -210,6 +230,7 @@ class Tree:
 
 
 # Node represents "space"
+# Can be empty or not empty.
 class Node:
     def __init__(self, rectangle, coords):
         self.leftChild = None
@@ -233,7 +254,7 @@ class Node:
         newLeftCoords = (self.coordinates[0], self.coordinates[1] + rect[1])
         newRightCoords = (self.coordinates[0] + rect[0], self.coordinates[1])
 
-        #create child nodes
+        # create child nodes
         self.leftChild = Node(newLeftDimen, newLeftCoords)
         self.rightChild = Node(newRightDimen, newRightCoords)
 
@@ -250,5 +271,5 @@ class binRect:
 
 # Represents the top-left corner of each rectangle tuple
 class binPoint:
-    def __init__(self,x,y):
+    def __init__(self, x, y):
         self.x, self.y = x, y
