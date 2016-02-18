@@ -90,7 +90,7 @@ def find_solution(rectangles):
     # Create tree
     binTree = Tree()
     # arbitrary size, need to make it dynamic
-    binTree.root = Node((550,550),(0,0))
+    binTree.root = Node(sortedRectangles[0],(0,0))
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
@@ -133,21 +133,24 @@ class Tree:
             currentNode = self.findSpace(self.root, rectangle)
             if currentNode is not None:
                 currentNode.splitSpace(rectangle)
+            else:
+                # grow
+                currentNode = self.growTree(rectangle)
 
         return currentNode
 
     def findSpace(self, currentNode, rectangle):
         # Replace recursion with iteration
-        while currentNode is not None:
-            if not currentNode.isEmpty:
-                if currentNode.rectTuple[1] > rectangle[1]:
-                    currentNode = currentNode.rightChild
-                else:
-                    currentNode = currentNode.leftChild
-            elif (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
-                return currentNode
-            else:
-                currentNode = None
+        # while currentNode is not None:
+        #     if not currentNode.isEmpty:
+        #         if currentNode.rectTuple[1] < rectangle[1]:
+        #             currentNode = currentNode.rightChild
+        #         else:
+        #             currentNode = currentNode.leftChild
+        #     elif (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
+        #         return currentNode
+        #     else:
+        #         currentNode = None
 
         # Save time by ignoring nodes that have been filled
         # for emptyNode in self.emptyNodes:
@@ -156,15 +159,53 @@ class Tree:
         #     else:
         #         currentNode = currentNode.leftChild
 
-        # if not currentNode.isEmpty:
-        #     if currentNode.rectTuple[1] < rectangle[1]:
-        #         return self.findSpace(currentNode.rightChild, rectangle)
-        #     else:
-        #         return self.findSpace(currentNode.leftChild, rectangle)
-        # elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-        #     return currentNode
+        if not currentNode.isEmpty:
+            return self.findSpace(currentNode.rightChild, rectangle)
+            return self.findSpace(currentNode.leftChild, rectangle)
+        elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+            return currentNode
 
-        return currentNode
+        return None
+
+    def growTree(self, rectangle):
+
+        if self.root.rectTuple[1] < self.root.rectTuple[0]:
+            return self.growTreeDown(rectangle)
+        else:
+            return self.growTreeRight(rectangle)
+        return None
+
+
+    def growTreeRight(self, rectangle):
+        newRootDimensions = (self.root.rectTuple[0] + rectangle[0], self.root.rectTuple[1])
+        newRoot = Node(newRootDimensions,(0,0))
+        newRoot.isEmpty = False
+        newRoot.leftChild = self.root
+
+        newRightChildSize = (rectangle[0], self.root.rectTuple[1])
+        newRightChildCoords = (self.root.rectTuple[0] + rectangle[0], 0)
+        newRoot.rightChild = Node(newRightChildSize, newRightChildCoords)
+
+        self.root = newRoot
+        self.root.rightChild.splitSpace(rectangle)
+
+        return self.root.rightChild
+
+
+    def growTreeDown(self, rectangle):
+        newRootDimensions = (self.root.rectTuple[0], self.root.rectTuple[1] + rectangle[1])
+        newRoot = Node(newRootDimensions,(0,0))
+        newRoot.isEmpty = False
+        newRoot.rightChild = self.root
+
+        newLeftChildSize = (self.root.rectTuple[0], rectangle[1])
+        newLeftChildCoords = (0, self.root.rectTuple[1] + rectangle[1], rectangle[2])
+        newRoot.leftChild = Node(newLeftChildSize, newLeftChildCoords)
+
+        self.root = newRoot
+        self.root.leftChild.splitSpace(rectangle)
+
+        return self.root.leftChild
 
 
 # Node represents "space"
