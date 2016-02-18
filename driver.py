@@ -98,7 +98,7 @@ RETURNS: the perimeter of the bounding rectangle, an integer
 
 
 def evaluate_solution (coordinates):
-    tuple = coordinates[1]              # grab first tuple of solution
+    tuple = coordinates[0]              # grab first tuple of solution
     min_x = tuple[0]                    # initializing smallest x
     max_y = tuple[1]                    # initializing largest y
     max_x = tuple[2]                    # initializing largest x

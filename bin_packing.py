@@ -111,7 +111,7 @@ def find_solution(rectangles):
 
     sortStart = time.time()
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=getOriginalIndexKey, reverse=True)
+    sortedRectangles.sort(key=getHeightKey, reverse=True)
     results = []
     time_elapsed = time.time() - sortStart
     print("Sort 1 ran in =", time_elapsed)
