@@ -160,8 +160,8 @@ class Tree:
         #         currentNode = currentNode.leftChild
 
         if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle)
-            return self.findSpace(currentNode.leftChild, rectangle)
+            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+            # return self.findSpace(currentNode.leftChild, rectangle)
         elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
             return currentNode
 
