@@ -46,7 +46,8 @@ def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
         
     file.close()
 
-generate_file("squares.txt", 1, 1000, 2500)
+# generate_file("squares.txt", 1, 1000, 2500)
+generate_file("squares.txt", 1, 1000, 8000)
 
 # -----------------------------------------------
 
@@ -65,7 +66,8 @@ RETURNS: a list of tuples that designate the top left corner placement,
          y1 = top left y coordinate of rectangle 1 placement, etc.
 """
 
-def find_naive_solution (rectangles):   
+
+def find_naive_solution (rectangles):
     placement = []
     upper_left_x = 0
     upper_left_y = 0
@@ -93,6 +95,7 @@ coordinates: a list of tuples, e.g. [(a1, b1, c1, d1), ... (an, bn, cn, dn)] whe
 --------------------------------------------------
 RETURNS: the perimeter of the bounding rectangle, an integer
 """
+
 
 def evaluate_solution (coordinates):
     tuple = coordinates[1]              # grab first tuple of solution
@@ -141,6 +144,7 @@ RETURNS: a list of tuples, e.g. [(a1, b1, c1, d1), ... (an, bn, cn, dn)] where
     d1 = lower right y of rectangle 1, etc.
 """
 
+
 def corner_coordinates (dimensions, upper_left):   
     answer = []
     
@@ -171,6 +175,7 @@ rectangle_2: similar to rectangle_1
 --------------------------------------------------
 RETURNS: True if the rectangles overlap, False if they don't
 """
+
 
 def overlap(rectangle_1, rectangle_2):
     
@@ -203,6 +208,7 @@ rectangle_2: similar to rectangle_1
 RETURNS: True if any rectangles overlap, False if none do
 """
 
+
 def is_solution_valid (coordinates):
     
     for i in range(len(coordinates)):
@@ -228,6 +234,7 @@ RETURNS: a list of tuples, e.g. [(w1, l1), ... (wn, ln)] where
     w1 = width of rectangle 1,
     l1 = length of rectangle 1, etc.
 """
+
 
 def read_file(file_name):
     file = open(file_name, "r")
@@ -255,6 +262,7 @@ file_name: name of the input file
 RETURNS: nothing
 """
 
+
 def solve_problem(file_name):
     rectangles = read_file(file_name)    
     clone = rectangles[:]       # clone so that original info retained
@@ -280,7 +288,7 @@ def solve_problem(file_name):
         print("Bounding Rectangle Perimeter of Your Solution =", perimeter)
         if time_elapsed > 5.0:                      # is student solution fast enough?
             print("Error.  Time Limit Exceeded.")
-            perimeter = 2 * naive_perimeter         # answer is penalized
+            # perimeter = 2 * naive_perimeter         # answer is penalized
         
     else:
         print("Error.  Overlapping Rectangles in Solution.")
