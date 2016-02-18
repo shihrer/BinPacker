@@ -22,6 +22,7 @@ RETURNS: a list of tuples that designate the top left corner placement,
          x1 = top left x coordinate of rectangle 1 placement
          y1 = top left y coordinate of rectangle 1 placement, etc.
 """
+import time
 
 
 def find_naive_solution(rectangles):
@@ -89,9 +90,9 @@ RETURNS: a list of tuples that designate the top left corner placement,
 #            Benefits to this solution
 # ------------------------------------------------------
 #   Sorting increases the efficiency of the solution greatly.
-#   Overlapping is never a concern.  It is impossible, actually.
+#   Overlapping is not a concern with sorted results.
 #   As we place larger blocks, area for smaller blocks is created.
-#   After a certain point, most small blocks can be placed without increasing our working area.
+#   After a certain point, small blocks can be placed without increasing our working area.
 # ------------------------------------------------------
 #                   Obstacles
 # ------------------------------------------------------
@@ -100,37 +101,57 @@ RETURNS: a list of tuples that designate the top left corner placement,
 def find_solution(rectangles):
     sortedRectangles = []
     # Add original index location to rectangles - necessary for putting tuples back in order for results
+
+    firstLoopStart = time.time()
     for i, rectangle in enumerate(rectangles):
         newTuple = rectangle + (i,)
         sortedRectangles.append(newTuple)
+    time_elapsed = time.time() - firstLoopStart
+    print("First loop ran in =", time_elapsed)
 
-    # Sort rectangles by height - necessary for implementing a decreasing first fit algorithm
-    sortedRectangles = sorted(sortedRectangles, key=getHeightKey, reverse=True)
+    sortStart = time.time()
+    # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
+    sortedRectangles.sort(key=getHeightKey, reverse=True)
     results = []
+    time_elapsed = time.time() - sortStart
+    print("Sort 1 ran in =", time_elapsed)
 
     # Create tree
     binTree = Tree()
 
+    start = time.time()
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
         results.append(result.rectTuple + result.coordinates)
 
-    # Build results list
-    resultsInOriginalOrder = sorted(results, key=getOriginalIndexKey)
+    time_elapsed = time.time() - start
+    print("My solution ran in =", time_elapsed)
+
+    sort2Start = time.time()
+    # Return results to original order
+    results.sort(key=getOriginalIndexKey)
+    time_elapsed = time.time() - sort2Start
+    print("Second sort ran in =", time_elapsed)
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
     # Make sure to set the "y" coordinate to be negative.
+    resultsStart = time.time()
     resultTuples = []
-    for resultTuple in resultsInOriginalOrder:
+    for resultTuple in results:
         resultTuples.append((resultTuple[3], -resultTuple[4]))
-
+    time_elapsed = time.time() - resultsStart
+    print("Results ran in =", time_elapsed)
     return resultTuples
 
 
 # Functions necessary for ordering the tuples
 def getHeightKey(item):
     return item[1]
+
+
+def getWidthKey(item):
+    return item[0]
 
 
 def getOriginalIndexKey(item):
