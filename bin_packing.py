@@ -81,7 +81,6 @@ def find_solution(rectangles):
     # Add original index location to rectangles - necessary for putting tuples back in order for results
     for i, rectangle in enumerate(rectangles):
         newTuple = rectangle + (i,)
-
         sortedRectangles.append(newTuple)
 
     # Sort rectangles by height - necessary for implementing a decreasing first fit algorithm
@@ -91,7 +90,7 @@ def find_solution(rectangles):
     # Create tree
     binTree = Tree()
     # arbitrary size, need to make it dynamic
-    binTree.root = Node((10000,10000),(0,0))
+    binTree.root = Node((10000000000,10000000000),(0,0))
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
@@ -121,6 +120,7 @@ def getHeightKey(item):
 class Tree:
     def __init__(self):
         self.root = None
+        self.emptyNodes = []
 
     def add(self, rectangle):
         currentNode = None
@@ -137,12 +137,33 @@ class Tree:
         return currentNode
 
     def findSpace(self, currentNode, rectangle):
-        if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        # Replace recursion with iteration
+        while not currentNode.isEmpty:
+            if currentNode.rectTuple[1] < rectangle[1]:
+                currentNode = currentNode.rightChild
+            else:
+                currentNode = currentNode.leftChild
+
+        # Save time by ignoring nodes that have been filled
+        # for emptyNode in self.emptyNodes:
+        #     if emptyNode.rectTuple[1] < rectangle[1]:
+        #         currentNode = currentNode.rightChild
+        #     else:
+        #         currentNode = currentNode.leftChild
+
+        if rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
             return currentNode
 
+        # if not currentNode.isEmpty:
+        #     if currentNode.rectTuple[1] < rectangle[1]:
+        #         return self.findSpace(currentNode.rightChild, rectangle)
+        #     else:
+        #         return self.findSpace(currentNode.leftChild, rectangle)
+        # elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #     return currentNode
+
         return None
+
 
 # Node represents "space"
 class Node:
@@ -175,11 +196,13 @@ class Node:
         # Change current node's size
         self.rectTuple = rect
 
+
 # Represents rectangle tuples we are trying to place
 class binRect:
     def __init__(self):
         self.point = binPoint()
         self.dim = ()
+
 
 # Represents the top-left corner of each rectangle tuple
 class binPoint:
