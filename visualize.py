@@ -3,7 +3,7 @@ import sys
 import time
 import bin_packing
 from driver import read_file, corner_coordinates, find_naive_solution, evaluate_solution, is_solution_valid, \
-    generate_file
+    generate_file, solve_problem
 
 min_x = 0
 max_y = 0
@@ -77,20 +77,22 @@ def visualize_problem(file_name):
 #     generate_file("squares.txt", 1, 1000, 10000)
 #     rectangles = visualize_problem("squares.txt")
 
-
-generate_file("squares.txt", 1, 1000, 100)
-rectangles = visualize_problem("squares.txt")
+generate_file("visualSquares.tx", 1, 100, 1000)
+rectangles = visualize_problem("squares2.txt")
+# generate_file("squares.txt", 1, 1000, 10000)
+# solve_problem("squares.txt")
 
 pygame.init()
 dflags = pygame.RESIZABLE
-size = (800,600)
+size = (1024,1024)
 rectangles_perimeter = ((max_x - min_x) + 50, (max_y - min_y) + 50)
 screen = pygame.display.set_mode(size, dflags)
 rectangles_surface = pygame.Surface(rectangles_perimeter)
 
-print (rectangles_perimeter)
+print(rectangles_perimeter)
 
 red = (255,0,0)
+black = (0,0,0)
 white = (255,255,255)
 
 while True:
@@ -105,7 +107,8 @@ while True:
     rectangles_surface.fill(white)
 
     for rectangle in rectangles:
-        pygame.draw.rect(rectangles_surface, red, rectangle, 1)
+        pygame.draw.rect(rectangles_surface, red, rectangle, 0)
+        pygame.draw.rect(rectangles_surface, black, rectangle, 1)
 
     screen.blit(pygame.transform.smoothscale(rectangles_surface, size), (0, 0))
 

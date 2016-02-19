@@ -22,6 +22,7 @@ RETURNS: a list of tuples that designate the top left corner placement,
          x1 = top left x coordinate of rectangle 1 placement
          y1 = top left y coordinate of rectangle 1 placement, etc.
 """
+import operator
 import time
 from collections import deque
 
@@ -110,7 +111,7 @@ def find_solution(rectangles):
         sortedRectangles.append(newTuple)
 
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=getHeightKey, reverse=True)
+    sortedRectangles.sort(key=operator.itemgetter(1,0), reverse=True)
     results = []
 
     # Create tree
@@ -157,12 +158,6 @@ def getWidthKey(item):
 def getOriginalIndexKey(item):
     return item[2]
 
-def getMaxSide(item):
-    if item[0] > item[1]:
-        return item[0]
-    else:
-        return item[1]
-
 
 # Tree class for containing nodes and functions to manipulate the nodes
 class Tree:
@@ -179,11 +174,11 @@ class Tree:
         else:
             # start = time.time()
             #currentNode = self.findSpaceDFS(rectangle)
-            currentNode = self.searchSpaces(rectangle)
+            #currentNode = self.searchSpaces(rectangle)
             # time_elapsed = time.time() - start
             # print("DFS in = ", time_elapsed)
             # start = time.time()
-            # currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
+            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
             # time_elapsed = time.time() - start
             # print("Normal in =", time_elapsed)
             #print("DFS processed = ", len(test))
@@ -218,22 +213,40 @@ class Tree:
 
         return None
 
-    def basic_dfs(self, currentNode, rectangle):
-        # if not currentNode.isEmpty:
-        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        # elif (rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]):
-        #     return currentNode
-        # else:
-        #     return None
-
-        if not currentNode.isEmpty:
-            yield
-
-        return None
-
+    # Recursive call
     def findSpace(self, currentNode, rectangle):
+        if not currentNode.isEmpty:
+            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+        elif (rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]):
+            return currentNode
+        else:
+            return None
 
+        # Recursively check our tree - optimize
+        # if currentNode is None:
+        #     return None
+        # if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #     return currentNode
+        # elif not currentNode.isEmpty:
+        #     # someNode = self.findSpace(currentNode.rightChild, rectangle)
+        #     # somenode2 = self.findSpace(currentNode.leftChild, rectangle)
+        #     # return someNode or somenode2
+        #     # if someNode:
+        #     #     return someNode
+        #     # else:
+        #     #     return self.findSpace(currentNode.leftChild, rectangle)
+        #
+        #     # if someNode and somenode2:
+        #     #     return someNode
+        #     # elif not someNode:
+        #     #     if somenode2:
+        #     #         return somenode2
+        #     # elif not somenode2:
+        #     #     if someNode:
+        #     #         return someNode
+        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
 
+    def findSpaceIt(selfself, rectangle):
         # traversalStack = []
         # currentNode = self.root
         # done = 0
@@ -267,49 +280,27 @@ class Tree:
         #         return current
         #
         #     descend_right(current.leftChild)
-
-
-
-        if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        elif (rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]):
-            return currentNode
-        else:
-            return None
-
-        # Recursively check our tree - optimize
-        # if currentNode is None:
-        #     return None
-        # if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-        #     return currentNode
-        # elif not currentNode.isEmpty:
-        #     # someNode = self.findSpace(currentNode.rightChild, rectangle)
-        #     # somenode2 = self.findSpace(currentNode.leftChild, rectangle)
-        #     # return someNode or somenode2
-        #     # if someNode:
-        #     #     return someNode
-        #     # else:
-        #     #     return self.findSpace(currentNode.leftChild, rectangle)
-        #
-        #     # if someNode and somenode2:
-        #     #     return someNode
-        #     # elif not someNode:
-        #     #     if somenode2:
-        #     #         return somenode2
-        #     # elif not somenode2:
-        #     #     if someNode:
-        #     #         return someNode
-        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-
         return None
 
     # Heuristic function for determining best way to add empty space.
     def growTree(self, rectangle):
+        can_go_down = rectangle[0] <= self.root.rectTuple[0]
+        can_go_right = rectangle[1] <= self.root.rectTuple[1]
+
+        should_go_down = can_go_down and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
+        should_go_right = can_go_right and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
+
         # These two checks attempt to keep the working area square.
-        if self.root.rectTuple[1] < self.root.rectTuple[0]:
+        if should_go_right:
+            return self.growTreeRight(rectangle)
+        elif should_go_down:
+            return self.growTreeDown(rectangle)
+        elif can_go_right:
+            return self.growTreeRight(rectangle)
+        elif can_go_down:
             return self.growTreeDown(rectangle)
         else:
-            return self.growTreeRight(rectangle)
+            return None
 
     # Pretty boring functions.
     # Create new root nodes.
@@ -328,9 +319,13 @@ class Tree:
         self.root = newRoot
         spaces.append(newRoot)
         spaces.append(self.root.rightChild)
-        self.root.rightChild.splitSpace(rectangle)
 
-        return self.root.rightChild
+        someNode = self.findSpace(self.root, rectangle)
+        if someNode is not None:
+            someNode.splitSpace(rectangle)
+            return someNode
+        else:
+            return None
 
     def growTreeDown(self, rectangle):
         newRootDimensions = (self.root.rectTuple[0], self.root.rectTuple[1] + rectangle[1])
@@ -345,9 +340,13 @@ class Tree:
         self.root = newRoot
         spaces.append(newRoot)
         spaces.append(self.root.leftChild)
-        self.root.leftChild.splitSpace(rectangle)
 
-        return self.root.leftChild
+        someNode = self.findSpace(self.root, rectangle)
+        if someNode is not None:
+            someNode.splitSpace(rectangle)
+            return someNode
+        else:
+            return None
 
 
 # Node represents "space"
@@ -364,15 +363,7 @@ class Node:
         # Just states that there is something placed in the current node.
         self.isEmpty = True
 
-    # def __key(self):
-    #     return self.coordinates
-    #
-    # def __hash__(self):
-    #     return hash(self.coordinates)
-    #
-    # def __eq__(x,y):
-    #     return x.__key() == y.__key()
-
+    # This splits the node and adds new child nodes
     def splitSpace(self, rect):
         #spaces.remove(self)
         self.isEmpty = False
@@ -392,16 +383,3 @@ class Node:
 
         # Change current node's size
         self.rectTuple = rect
-
-
-# Represents rectangle tuples we are trying to place
-class binRect:
-    def __init__(self):
-        self.point = binPoint()
-        self.dim = ()
-
-
-# Represents the top-left corner of each rectangle tuple
-class binPoint:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
