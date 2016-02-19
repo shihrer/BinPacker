@@ -100,21 +100,15 @@ RETURNS: a list of tuples that designate the top left corner placement,
 # ------------------------------------------------------
 def find_solution(rectangles):
     sortedRectangles = []
+    
     # Add original index location to rectangles - necessary for putting tuples back in order for results
-
-    firstLoopStart = time.time()
     for i, rectangle in enumerate(rectangles):
         newTuple = rectangle + (i,)
         sortedRectangles.append(newTuple)
-    time_elapsed = time.time() - firstLoopStart
-    print("First loop ran in =", time_elapsed)
 
-    sortStart = time.time()
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=getWidthKey, reverse=True)
+    sortedRectangles.sort(key=getHeightKey, reverse=True)
     results = []
-    time_elapsed = time.time() - sortStart
-    print("Sort 1 ran in =", time_elapsed)
 
     # Create tree
     binTree = Tree()
@@ -124,24 +118,22 @@ def find_solution(rectangles):
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
         results.append(result.rectTuple + result.coordinates)
-
     time_elapsed = time.time() - start
     print("My solution ran in =", time_elapsed)
 
-    sort2Start = time.time()
     # Return results to original order
     results.sort(key=getOriginalIndexKey)
-    time_elapsed = time.time() - sort2Start
-    print("Second sort ran in =", time_elapsed)
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
     # Make sure to set the "y" coordinate to be negative.
-    resultsStart = time.time()
     resultTuples = []
     for resultTuple in results:
         resultTuples.append((resultTuple[3], -resultTuple[4]))
-    time_elapsed = time.time() - resultsStart
-    print("Results ran in =", time_elapsed)
+        
+    resultTuples = []
+    for resultTuple in results:
+        resultTuples.append((resultTuple[3], -resultTuple[4]))
+        
     return resultTuples
 
 
@@ -149,6 +141,11 @@ def find_solution(rectangles):
 def getHeightKey(item):
     return item[1]
 
+def getMaxSide(item):
+    if item[0] > item[1]:
+        return item[0]
+    else:
+        return item[1]
 
 def getWidthKey(item):
     return item[0]
@@ -157,12 +154,17 @@ def getWidthKey(item):
 def getOriginalIndexKey(item):
     return item[2]
 
+def getMaxSide(item):
+    if item[0] > item[1]:
+        return item[0]
+    else:
+        return item[1]
+
 
 # Tree class for containing nodes and functions to manipulate the nodes
 class Tree:
     def __init__(self):
         self.root = None
-        self.keyNode = None
 
     def add(self, rectangle):
         currentNode = None                                      # Setup variable to return answer.
@@ -171,16 +173,17 @@ class Tree:
             self.root.splitSpace(rectangle)                     # Create space for next root.
             currentNode = self.root                             # Place answer in this root.
         else:
-            currentNode = self.findSpace(self.keyNode, rectangle)  # Find space to fit.
+            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
             if currentNode is not None:                         # Check to see if space was found.
                 currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
                 currentNode = self.growTree(rectangle)          # No space found.  Add more.
 
-        self.keyNode = currentNode
+
         return currentNode                                      # Return answer.
 
     def findSpace(self, currentNode, rectangle):
+
 
         # traversalStack = []
         # currentNode = self.root
@@ -189,25 +192,33 @@ class Tree:
         # while not done:
         #     if currentNode is not None:
         #         traversalStack.append(currentNode)
-        #         currentNode = currentNode.leftChild
+        #         currentNode = currentNode.rightChild
         #     else:
         #         if len(traversalStack) > 0:
         #             currentNode = traversalStack.pop()
         #
-        #             if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #             if (currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
         #                 return currentNode
         #
-        #             currentNode = currentNode.rightChild
+        #             currentNode = currentNode.leftChild
         #         else:
         #             done = 1
 
-        # Recursively check our tree - optimize to be iterative.
-        if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-            return currentNode
+        # if not currentNode.isEmpty:
+        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+        # elif (rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]):
+        #     return  currentNode
+        # else:
+        #     return None
 
-        # Uh oh, something really broke if you don't return something.
+        # Recursively check our tree - optimize
+        # if currentNode is None:
+        #     return None
+        # if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #     return currentNode
+        # elif not currentNode.isEmpty:
+        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+
         return None
 
     # Heuristic function for determining best way to add empty space.
