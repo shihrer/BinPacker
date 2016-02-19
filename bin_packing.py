@@ -111,7 +111,7 @@ def find_solution(rectangles):
 
     sortStart = time.time()
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=getHeightKey, reverse=True)
+    sortedRectangles.sort(key=getWidthKey, reverse=True)
     results = []
     time_elapsed = time.time() - sortStart
     print("Sort 1 ran in =", time_elapsed)
@@ -162,6 +162,7 @@ def getOriginalIndexKey(item):
 class Tree:
     def __init__(self):
         self.root = None
+        self.keyNode = None
 
     def add(self, rectangle):
         currentNode = None                                      # Setup variable to return answer.
@@ -170,56 +171,41 @@ class Tree:
             self.root.splitSpace(rectangle)                     # Create space for next root.
             currentNode = self.root                             # Place answer in this root.
         else:
-            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
+            currentNode = self.findSpace(self.keyNode, rectangle)  # Find space to fit.
             if currentNode is not None:                         # Check to see if space was found.
                 currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
                 currentNode = self.growTree(rectangle)          # No space found.  Add more.
 
+        self.keyNode = currentNode
         return currentNode                                      # Return answer.
 
     def findSpace(self, currentNode, rectangle):
-        # Replace recursion with iteration
-        # while currentNode is not None:
-        #     if not currentNode.isEmpty:
-        #         if currentNode.rectTuple[1] < rectangle[1]:
+
+        # traversalStack = []
+        # currentNode = self.root
+        # done = 0
+        #
+        # while not done:
+        #     if currentNode is not None:
+        #         traversalStack.append(currentNode)
+        #         currentNode = currentNode.leftChild
+        #     else:
+        #         if len(traversalStack) > 0:
+        #             currentNode = traversalStack.pop()
+        #
+        #             if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #                 return currentNode
+        #
         #             currentNode = currentNode.rightChild
         #         else:
-        #             currentNode = currentNode.leftChild
-        #     elif (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
-        #         return currentNode
-        #     else:
-        #         currentNode = None
+        #             done = 1
 
-        # Save time by ignoring nodes that have been filled
-        # for emptyNode in self.emptyNodes:
-        #     if emptyNode.rectTuple[1] < rectangle[1]:
-        #         currentNode = currentNode.rightChild
-        #     else:
-        #         currentNode = currentNode.leftChild
-        traversalStack = []
-        currentNode = self.root
-        done = 0
-
-        while not done:
-            if currentNode is not None:
-                traversalStack.append(currentNode)
-                currentNode = currentNode.leftChild
-            else:
-                if len(traversalStack) > 0:
-                    currentNode = traversalStack.pop()
-
-                    if not currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-                        return currentNode
-
-                    currentNode = currentNode.rightChild
-                else:
-                    done = 1
         # Recursively check our tree - optimize to be iterative.
-        # if not currentNode.isEmpty:
-        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        # elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-        #     return currentNode
+        if not currentNode.isEmpty:
+            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+        elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+            return currentNode
 
         # Uh oh, something really broke if you don't return something.
         return None
