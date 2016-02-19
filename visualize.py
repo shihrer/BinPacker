@@ -73,16 +73,22 @@ def visualize_problem(file_name):
 
     return visualizeTuples
 
+for i in range(1,5):
+    generate_file("squares.txt", 1, 100, 5000)
+    rectangles = visualize_problem("squares.txt")
 
-generate_file("squares.txt", 1, 100, 1000)
+
+generate_file("squares.txt", 1, 100, 2000)
 rectangles = visualize_problem("squares.txt")
 
 pygame.init()
 dflags = pygame.RESIZABLE
-size = (1024,768)
+size = (800,600)
 rectangles_perimeter = ((max_x - min_x) + 50, (max_y - min_y) + 50)
 screen = pygame.display.set_mode(size, dflags)
 rectangles_surface = pygame.Surface(rectangles_perimeter)
+
+print (rectangles_perimeter)
 
 red = (255,0,0)
 white = (255,255,255)
@@ -99,7 +105,7 @@ while True:
     rectangles_surface.fill(white)
 
     for rectangle in rectangles:
-        pygame.draw.rect(rectangles_surface, red, rectangle, 0)
+        pygame.draw.rect(rectangles_surface, red, rectangle, 1)
 
     screen.blit(pygame.transform.smoothscale(rectangles_surface, size), (0, 0))
 
