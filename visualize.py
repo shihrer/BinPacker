@@ -78,7 +78,7 @@ def visualize_problem(file_name):
 #     rectangles = visualize_problem("squares.txt")
 
 
-#generate_file("squares.txt", 1, 100, 5000)
+generate_file("squares.txt", 1, 1000, 100)
 rectangles = visualize_problem("squares.txt")
 
 pygame.init()
@@ -105,7 +105,7 @@ while True:
     rectangles_surface.fill(white)
 
     for rectangle in rectangles:
-        pygame.draw.rect(rectangles_surface, red, rectangle, 0)
+        pygame.draw.rect(rectangles_surface, red, rectangle, 1)
 
     screen.blit(pygame.transform.smoothscale(rectangles_surface, size), (0, 0))
 
