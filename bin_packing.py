@@ -100,21 +100,15 @@ RETURNS: a list of tuples that designate the top left corner placement,
 # ------------------------------------------------------
 def find_solution(rectangles):
     sortedRectangles = []
-    # Add original index location to rectangles - necessary for putting tuples back in order for results
 
-    firstLoopStart = time.time()
+    # Add original index location to rectangles - necessary for putting tuples back in order for results
     for i, rectangle in enumerate(rectangles):
         newTuple = rectangle + (i,)
         sortedRectangles.append(newTuple)
-    time_elapsed = time.time() - firstLoopStart
-    print("First loop ran in =", time_elapsed)
 
-    sortStart = time.time()
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
     sortedRectangles.sort(key=getHeightKey, reverse=True)
     results = []
-    time_elapsed = time.time() - sortStart
-    print("Sort 1 ran in =", time_elapsed)
 
     # Create tree
     binTree = Tree()
@@ -124,24 +118,19 @@ def find_solution(rectangles):
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
         results.append(result.rectTuple + result.coordinates)
-
     time_elapsed = time.time() - start
     print("My solution ran in =", time_elapsed)
 
-    sort2Start = time.time()
     # Return results to original order
     results.sort(key=getOriginalIndexKey)
-    time_elapsed = time.time() - sort2Start
-    print("Second sort ran in =", time_elapsed)
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
     # Make sure to set the "y" coordinate to be negative.
-    resultsStart = time.time()
+
     resultTuples = []
     for resultTuple in results:
         resultTuples.append((resultTuple[3], -resultTuple[4]))
-    time_elapsed = time.time() - resultsStart
-    print("Results ran in =", time_elapsed)
+
     return resultTuples
 
 
@@ -149,6 +138,11 @@ def find_solution(rectangles):
 def getHeightKey(item):
     return item[1]
 
+def getMaxSide(item):
+    if item[0] > item[1]:
+        return item[0]
+    else:
+        return item[1]
 
 def getWidthKey(item):
     return item[0]
