@@ -162,6 +162,7 @@ def getOriginalIndexKey(item):
 class Tree:
     def __init__(self):
         self.root = None
+        self.keyNode = None
 
     def add(self, rectangle):
         currentNode = None                                      # Setup variable to return answer.
@@ -170,12 +171,13 @@ class Tree:
             self.root.splitSpace(rectangle)                     # Create space for next root.
             currentNode = self.root                             # Place answer in this root.
         else:
-            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
+            currentNode = self.findSpace(self.keyNode, rectangle)  # Find space to fit.
             if currentNode is not None:                         # Check to see if space was found.
                 currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
                 currentNode = self.growTree(rectangle)          # No space found.  Add more.
 
+        self.keyNode = currentNode
         return currentNode                                      # Return answer.
 
     def findSpace(self, currentNode, rectangle):

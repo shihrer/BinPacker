@@ -73,12 +73,12 @@ def visualize_problem(file_name):
 
     return visualizeTuples
 
-for i in range(1,5):
-    generate_file("squares.txt", 1, 100, 5000)
-    rectangles = visualize_problem("squares.txt")
+# for i in range(1,70):
+#     generate_file("squares.txt", 1, 1000, 10000)
+#     rectangles = visualize_problem("squares.txt")
 
 
-generate_file("squares.txt", 1, 100, 2000)
+generate_file("squares.txt", 1, 100, 1000)
 rectangles = visualize_problem("squares.txt")
 
 pygame.init()
