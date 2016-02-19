@@ -197,12 +197,29 @@ class Tree:
         #         currentNode = currentNode.rightChild
         #     else:
         #         currentNode = currentNode.leftChild
+        traversalStack = []
+        currentNode = self.root
+        done = 0
 
+        while not done:
+            if currentNode is not None:
+                traversalStack.append(currentNode)
+                currentNode = currentNode.leftChild
+            else:
+                if len(traversalStack) > 0:
+                    currentNode = traversalStack.pop()
+
+                    if not currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+                        return currentNode
+
+                    currentNode = currentNode.rightChild
+                else:
+                    done = 1
         # Recursively check our tree - optimize to be iterative.
-        if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-            return currentNode
+        # if not currentNode.isEmpty:
+        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+        # elif rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #     return currentNode
 
         # Uh oh, something really broke if you don't return something.
         return None
