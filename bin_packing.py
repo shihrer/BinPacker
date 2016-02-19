@@ -111,7 +111,7 @@ def find_solution(rectangles):
 
     sortStart = time.time()
     # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=getHeightKey, reverse=True)
+    sortedRectangles.sort(key=getWidthKey, reverse=True)
     results = []
     time_elapsed = time.time() - sortStart
     print("Sort 1 ran in =", time_elapsed)
@@ -181,24 +181,25 @@ class Tree:
         return currentNode                                      # Return answer.
 
     def findSpace(self, currentNode, rectangle):
-        # Replace recursion with iteration
-        # while currentNode is not None:
-        #     if not currentNode.isEmpty:
-        #         if currentNode.rectTuple[1] < rectangle[1]:
+
+        # traversalStack = []
+        # currentNode = self.root
+        # done = 0
+        #
+        # while not done:
+        #     if currentNode is not None:
+        #         traversalStack.append(currentNode)
+        #         currentNode = currentNode.leftChild
+        #     else:
+        #         if len(traversalStack) > 0:
+        #             currentNode = traversalStack.pop()
+        #
+        #             if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
+        #                 return currentNode
+        #
         #             currentNode = currentNode.rightChild
         #         else:
-        #             currentNode = currentNode.leftChild
-        #     elif (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
-        #         return currentNode
-        #     else:
-        #         currentNode = None
-
-        # Save time by ignoring nodes that have been filled
-        # for emptyNode in self.emptyNodes:
-        #     if emptyNode.rectTuple[1] < rectangle[1]:
-        #         currentNode = currentNode.rightChild
-        #     else:
-        #         currentNode = currentNode.leftChild
+        #             done = 1
 
         # Recursively check our tree - optimize to be iterative.
         if not currentNode.isEmpty:
