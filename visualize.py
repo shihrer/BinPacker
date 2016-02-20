@@ -77,8 +77,8 @@ def visualize_problem(file_name):
 #     generate_file("squares.txt", 1, 1000, 10000)
 #     rectangles = visualize_problem("squares.txt")
 
-generate_file("visualSquares.txt", 1, 1000, 10000)
-rectangles = visualize_problem("visualSquares.txt")
+generate_file("visualSquares.txt", 1, 500, 2000)
+rectangles = visualize_problem("squares2.txt")
 # generate_file("squares.txt", 1, 1000, 10000)
 # solve_problem("squares.txt")
 

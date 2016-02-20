@@ -42,7 +42,7 @@ def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
     for square in range(number_rectangles):
         width = random.randint(min_dimension, max_dimension)
         length = random.randint(min_dimension, max_dimension)
-        file.write(str(width) + " " + str(5) + "\n")
+        file.write(str(width) + " " + str(length) + "\n")
         
     file.close()
 
@@ -297,5 +297,5 @@ def solve_problem(file_name):
 
 # -----------------------------------------------
 
-# generate_file("squares.txt", 1, 1000, 100)
+# generate_file("squares.txt", 1, 1000, 5000)
 # solve_problem("squares.txt")

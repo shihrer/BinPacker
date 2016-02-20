@@ -23,9 +23,7 @@ RETURNS: a list of tuples that designate the top left corner placement,
          y1 = top left y coordinate of rectangle 1 placement, etc.
 """
 import operator
-import time
 from collections import deque
-
 import itertools
 
 
@@ -72,19 +70,20 @@ RETURNS: a list of tuples that designate the top left corner placement,
 # First, the original order of the rectangle tuples must be saved.
 #   This is necessary in order to return the results list in the original order.
 # After, the rectangle tuples are sorted in decreasing order.
-#   This means that the first item in the list is the "largest"
-#       Followed by the next largest, down to the smallest.
-#   Largest is determined by heuristics.
-#       Experimented with width, height, area, perimeter, max(w,h).
-# We use a binary tree to represent the "space" available to place items.
+#   Rectangles are sorted by height.
+#       If heights match, then sort by width.
+# We use a tree to represent the "space" available to place items.
 #   The root node represents the total size of our working space.
 #       Starting size just needs to be large enough to contain the first item.
+#   The tree grows.  This solves the dynamic programming problem of placing squares.
+#       We use previous work (placement of rectangles) to determine where to place a new rectangle.
 # For every rectangle tuple, we find an empty node large enough to fit it.
 # If a node is found, child nodes are created based off the remaining space.
 #   The left node represents space "below" the previously placed rectangle.
 #   The right node represents space "next" to the previously placed rectangle.
 # If no nodes are found that can fit a new node, we create more "space"
 #   We use heuristics to guess the best way to increase space.
+#       Our heuristics attempt to keep the overall working are a square.
 #   Increasing space creates a new root node for the tree.
 #   If space is added to the right of "full" space.
 #       New space is added as a right child.
@@ -94,34 +93,38 @@ RETURNS: a list of tuples that designate the top left corner placement,
 #            Benefits to this solution
 # ------------------------------------------------------
 #   Sorting increases the efficiency of the solution greatly.
-#   Overlapping is not a concern with sorted results.
+#   Overlapping is not a concern.  We don't even have to check for it.
 #   As we place larger blocks, area for smaller blocks is created.
-#   After a certain point, small blocks can be placed without increasing our working area.
 # ------------------------------------------------------
 #                   Obstacles
 # ------------------------------------------------------
 # Recursion is slow.
+#   We optimized our solution from a runtime of about 30 seconds
+#       Currently can run 10,000 items in a second or so.
+# Our sort could be better.
+#   Items that are much wider than they are tall should be placed a little sooner.
 # ------------------------------------------------------
-spaces = deque()
 
 def find_solution(rectangles):
     sortedRectangles = []
     
     # Add original index location to rectangles - necessary for putting tuples back in order for results
+    # Probably a more pythonic way to do this...
     for i, rectangle in enumerate(rectangles):
-        newTuple = rectangle + (i,)
-        sortedRectangles.append(newTuple)
+        new_tuple = rectangle + (i,)
+        sortedRectangles.append(new_tuple)
 
-    # Sort rectangles by height - necessary for implementing a decreasing first fit type of solution
-    sortedRectangles.sort(key=operator.itemgetter(1,0), reverse=True)
+    # Sort rectangles by height then width.
+    # Going for a decreasing height, decreasing width best fit type of solution.
+    sortedRectangles.sort(key=operator.itemgetter(1, 0), reverse=True)
     results = []
 
     # Create tree
-    binTree = Tree()
+    packed_tree = Tree()
 
     # Place sorted rectangles
     for rectangle in sortedRectangles:
-        result = binTree.add(rectangle)
+        result = packed_tree.add(rectangle)
         results.append(result.rectTuple + result.coordinates)
 
     # Return results to original order
@@ -129,14 +132,14 @@ def find_solution(rectangles):
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
     # Make sure to set the "y" coordinate to be negative.
-    resultTuples = []
-    for resultTuple in results:
-        resultTuples.append((resultTuple[3], -resultTuple[4]))
+    result_tuples = []
+    for result in results:
+        result_tuples.append((result[3], -result[4]))
         
-    return resultTuples
+    return result_tuples
 
-
-# Tree class for containing nodes and functions to manipulate the nodes
+empty_spaces = deque()
+# The "tree" is more of a dynamic solution for placing rectangles
 class Tree:
     def __init__(self):
         self.root = None
@@ -144,13 +147,11 @@ class Tree:
     def add(self, rectangle):
         if self.root is None:                                   # Check to see if we have initialized root node
             self.root = Node(rectangle, (0, 0))                 # Root node originates at(0,0).
-            spaces.append(self.root)
+            empty_spaces.append(self.root)
             self.root.splitSpace(rectangle)                     # Create space for next root.
             currentNode = self.root                             # Place answer in this root.
         else:
-            currentNode = self.searchSpaces(rectangle)
-            # currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
-
+            currentNode = self.search_spaces(rectangle)          # Find space to fit.
             if currentNode is not None:                         # Check to see if space was found.
                 currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
@@ -158,80 +159,42 @@ class Tree:
 
         return currentNode                                      # Return answer.
 
-    #Iteratively search through nodes
-    def searchSpaces(self, rectangle):
-        bestFitSpace = None
-        counter = 0
-        ignoreHistory = 1
-        if len(spaces) > 500:
-            ignoreHistory = 5
-        for space in itertools.islice(spaces, 0, len(spaces)//ignoreHistory):
-        #for space in spaces:
-            if space.isEmpty and (rectangle[0] <= space.rectTuple[0]) and (rectangle[1] <= space.rectTuple[1]):
-                bestFitSpace = space
-
-                #return bestFitSpace
-
-                if bestFitSpace:
-                    if space.rectTuple[0] - rectangle[0] < bestFitSpace.rectTuple[0] - rectangle[0]:
-                        bestFitSpace = space
-
-        return bestFitSpace
-
-    # Recursive call
-    def findSpace(self, currentNode, rectangle):
-        if not currentNode.isEmpty:
-            return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
-        elif (rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]):
-            return currentNode
+    # Best-fit iterative search.
+    @staticmethod
+    def search_spaces(rectangle):
+        # This is a trick to stop looping through the spaces list.
+        # When spaces gets too large, it just takes too long to go through it.
+        # More than likely, our best fit will be early on in the list thanks to our sorting.
+        # The bigger the number, the faster our solution.  However, it becomes less accurate.
+        if len(empty_spaces) > 1000:
+            ignore_size = len(empty_spaces)//3
+        elif len(empty_spaces) > 500:
+            ignore_size = len(empty_spaces)//2
         else:
-            return None
+            ignore_size = len(empty_spaces)
+        best_fit = None
+        for space in itertools.islice(empty_spaces, 0, ignore_size):
+            # See if our space is a candidate
+            if space.isEmpty and (rectangle[0] <= space.rectTuple[0]) and (rectangle[1] <= space.rectTuple[1]):
+                # We do!
+                best_fit = space
 
-        # Recursively check our tree - optimize
-        # if currentNode is None:
-        #     return None
-        # if currentNode.isEmpty and rectangle[0] <= currentNode.rectTuple[0] and rectangle[1] <= currentNode.rectTuple[1]:
-        #     return currentNode
-        # elif not currentNode.isEmpty:
-        #     # someNode = self.findSpace(currentNode.rightChild, rectangle)
-        #     # somenode2 = self.findSpace(currentNode.leftChild, rectangle)
-        #     # return someNode or somenode2
-        #     # if someNode:
-        #     #     return someNode
-        #     # else:
-        #     #     return self.findSpace(currentNode.leftChild, rectangle)
-        #
-        #     # if someNode and somenode2:
-        #     #     return someNode
-        #     # elif not someNode:
-        #     #     if somenode2:
-        #     #         return somenode2
-        #     # elif not somenode2:
-        #     #     if someNode:
-        #     #         return someNode
-        #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
+                # Have we already found a candidate?
+                if best_fit:
+                    # See if our new candidate is better than the last.
+                    if space.rectTuple[0] - rectangle[0] < best_fit.rectTuple[0] - rectangle[0]:
+                        best_fit = space
+                    elif space.rectTuple[1] - rectangle[1] < best_fit.rectTuple[1] - rectangle[1]:
+                        best_fit = space
 
-    def findSpaceIt(selfself, rectangle):
-        # current = self.root
-        # parents = []
-        # def descend_right(current):
-        #     while current is not None:
-        #         parents.append(current)
-        #         current = currentNode.rightChild
-        # descend_right(current)
-        # while parents:
-        #     current = parents.pop()
-        #     if current.isEmpty and (rectangle[0] <= current.rectTuple[0]) and (rectangle[1] <= current.rectTuple[1]):
-        #         return current
-        #
-        #     descend_right(current.leftChild)
-        return None
+        return best_fit
 
-    # Heuristic function for determining best way to add empty space.
+    # Determine which way to grow in order to add space.
     def growTree(self, rectangle):
         goDown = rectangle[0] <= self.root.rectTuple[0]
         goRight = rectangle[1] <= self.root.rectTuple[1]
 
+        # Sometimes it's not bad to be square.
         defGoDown = goDown and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
         defGoRight = goRight and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
 
@@ -245,12 +208,12 @@ class Tree:
         elif goDown:
             return self.growTreeDown(rectangle)
         else:
-            return None
+            return None # this is bad.  Avoid this!
 
-    # Pretty boring functions.
     # Create new root nodes.
     # Swap in new root.
     # Put old root in proper child.
+    # I could probably generalize this...out of time
     def growTreeRight(self, rectangle):
         newRootDimensions = (self.root.rectTuple[0] + rectangle[0], self.root.rectTuple[1])
         newRoot = Node(newRootDimensions, (0, 0))
@@ -262,17 +225,13 @@ class Tree:
         newRoot.rightChild = Node(newRightChildSize, newRightChildCoords)
 
         self.root = newRoot
-        #Right child is new, add it to spaces collection
-        spaces.appendleft(newRoot.rightChild)
 
-        someNode = self.root.rightChild
-        #someNode = self.findSpace(self.root.rightChild, rectangle)
-        # someNode = self.searchSpaces(rectangle)
-        if someNode is not None:
-            someNode.splitSpace(rectangle)
-            return someNode
-        else:
-            return None
+        # Right child is new. Add it to spaces only if it can fit something.
+        if self.root.rightChild.rectTuple[0] > 0 and self.root.rightChild.rectTuple[1] > 0:
+            empty_spaces.appendleft(newRoot.rightChild)
+
+        self.root.rightChild.splitSpace(rectangle)
+        return self.root.rightChild
 
     def growTreeDown(self, rectangle):
         newRootDimensions = (self.root.rectTuple[0], self.root.rectTuple[1] + rectangle[1])
@@ -284,18 +243,15 @@ class Tree:
         newLeftChildCoords = (0, self.root.rectTuple[1], rectangle[2])
         newRoot.leftChild = Node(newLeftChildSize, newLeftChildCoords)
 
+        # Replace old root
         self.root = newRoot
-        #Left child is new.  Add it to spaces.
-        spaces.appendleft(self.root.leftChild)
 
-        someNode = self.root.leftChild
-        # someNode = self.findSpace(self.root.leftChild, rectangle)
-        # someNode = self.searchSpaces(rectangle)
-        if someNode is not None:
-            someNode.splitSpace(rectangle)
-            return someNode
-        else:
-            return None
+        # Left child is new.  Add it to spaces only if it can fit something.
+        if self.root.leftChild.rectTuple[0] > 0 and self.root.leftChild.rectTuple[1] > 0:
+            empty_spaces.appendleft(self.root.leftChild)
+
+        self.root.leftChild.splitSpace(rectangle)
+        return self.root.leftChild
 
 
 # Node represents "space"
@@ -314,21 +270,33 @@ class Node:
 
     # This splits the node and adds new child nodes
     def splitSpace(self, rect):
-        spaces.remove(self)
+        # Remove space since it's no longer empty.  Might not really help since it takes time to delete.
+        empty_spaces.remove(self)
         self.isEmpty = False
 
-        # Sizes for children
+        # Sizes for new children
         newLeftDimen = (self.rectTuple[0], self.rectTuple[1] - rect[1])
         newRightDimen = (self.rectTuple[0] - rect[0], rect[1])
 
-        # Starting coordinates for children
+        # Starting coordinates for new children
         newLeftCoords = (self.coordinates[0], self.coordinates[1] + rect[1])
         newRightCoords = (self.coordinates[0] + rect[0], self.coordinates[1])
 
         # create child nodes
         self.leftChild = Node(newLeftDimen, newLeftCoords)
         self.rightChild = Node(newRightDimen, newRightCoords)
-        spaces.extendleft([self.leftChild, self.rightChild])
+
+        # Add these nodes to our spaces list.
+        # Only if they could possibly fit something in the future.
+        # Major optimization since sometimes child nodes will have a dimension of zero
+        if self.leftChild.rectTuple[0] > 0 and self.leftChild.rectTuple[1] > 0:
+            empty_spaces.appendleft(self.leftChild)
+        else:
+            self.leftChild.isEmpty = False
+        if self.rightChild.rectTuple[0] > 0 and self.rightChild.rectTuple[0] > 0:
+            empty_spaces.appendleft(self.rightChild)
+        else:
+            self.rightChild.isEmpty = False
 
         # Change current node's size
         self.rectTuple = rect
