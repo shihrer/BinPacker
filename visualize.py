@@ -77,14 +77,14 @@ def visualize_problem(file_name):
 #     generate_file("squares.txt", 1, 1000, 10000)
 #     rectangles = visualize_problem("squares.txt")
 
-generate_file("visualSquares.tx", 1, 100, 1000)
-rectangles = visualize_problem("squares2.txt")
+generate_file("visualSquares.txt", 1, 1000, 10000)
+rectangles = visualize_problem("visualSquares.txt")
 # generate_file("squares.txt", 1, 1000, 10000)
 # solve_problem("squares.txt")
 
 pygame.init()
 dflags = pygame.RESIZABLE
-size = (1024,1024)
+size = (800,600)
 rectangles_perimeter = ((max_x - min_x) + 50, (max_y - min_y) + 50)
 screen = pygame.display.set_mode(size, dflags)
 rectangles_surface = pygame.Surface(rectangles_perimeter)

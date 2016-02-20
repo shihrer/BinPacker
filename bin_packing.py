@@ -26,6 +26,8 @@ import operator
 import time
 from collections import deque
 
+import itertools
+
 
 def find_naive_solution(rectangles):
     placement = []
@@ -117,16 +119,13 @@ def find_solution(rectangles):
     # Create tree
     binTree = Tree()
 
-    start = time.time()
     # Place sorted rectangles
     for rectangle in sortedRectangles:
         result = binTree.add(rectangle)
         results.append(result.rectTuple + result.coordinates)
-    time_elapsed = time.time() - start
-    print("My solution ran in =", time_elapsed)
 
     # Return results to original order
-    results.sort(key=getOriginalIndexKey)
+    results.sort(key=operator.itemgetter(2))
 
     # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
     # Make sure to set the "y" coordinate to be negative.
@@ -134,29 +133,7 @@ def find_solution(rectangles):
     for resultTuple in results:
         resultTuples.append((resultTuple[3], -resultTuple[4]))
         
-    resultTuples = []
-    for resultTuple in results:
-        resultTuples.append((resultTuple[3], -resultTuple[4]))
-        
     return resultTuples
-
-
-# Functions necessary for ordering the tuples
-def getHeightKey(item):
-    return item[1]
-
-def getMaxSide(item):
-    if item[0] > item[1]:
-        return item[0]
-    else:
-        return item[1]
-
-def getWidthKey(item):
-    return item[0]
-
-
-def getOriginalIndexKey(item):
-    return item[2]
 
 
 # Tree class for containing nodes and functions to manipulate the nodes
@@ -165,53 +142,41 @@ class Tree:
         self.root = None
 
     def add(self, rectangle):
-        currentNode = None                                      # Setup variable to return answer.
         if self.root is None:                                   # Check to see if we have initialized root node
             self.root = Node(rectangle, (0, 0))                 # Root node originates at(0,0).
             spaces.append(self.root)
             self.root.splitSpace(rectangle)                     # Create space for next root.
             currentNode = self.root                             # Place answer in this root.
         else:
-            # start = time.time()
-            #currentNode = self.findSpaceDFS(rectangle)
-            #currentNode = self.searchSpaces(rectangle)
-            # time_elapsed = time.time() - start
-            # print("DFS in = ", time_elapsed)
-            # start = time.time()
-            currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
-            # time_elapsed = time.time() - start
-            # print("Normal in =", time_elapsed)
-            #print("DFS processed = ", len(test))
+            currentNode = self.searchSpaces(rectangle)
+            # currentNode = self.findSpace(self.root, rectangle)  # Find space to fit.
+
             if currentNode is not None:                         # Check to see if space was found.
                 currentNode.splitSpace(rectangle)               # Create child nodes.
             else:
                 currentNode = self.growTree(rectangle)          # No space found.  Add more.
 
-
         return currentNode                                      # Return answer.
 
+    #Iteratively search through nodes
     def searchSpaces(self, rectangle):
-        for space in spaces:
+        bestFitSpace = None
+        counter = 0
+        ignoreHistory = 1
+        if len(spaces) > 500:
+            ignoreHistory = 5
+        for space in itertools.islice(spaces, 0, len(spaces)//ignoreHistory):
+        #for space in spaces:
             if space.isEmpty and (rectangle[0] <= space.rectTuple[0]) and (rectangle[1] <= space.rectTuple[1]):
-                return space
-        return None
+                bestFitSpace = space
 
-    def findSpaceDFS(self, rectangle):
-        visited, stack = set(), deque([self.root])
-        while stack:
-            current = stack.popleft()
-            if current in visited:
-                continue
+                #return bestFitSpace
 
-            visited.add(current)
-            if current.leftChild is not None:
-                node_children = set([current.leftChild, current.rightChild])
-                stack.extend(node_children - visited)
+                if bestFitSpace:
+                    if space.rectTuple[0] - rectangle[0] < bestFitSpace.rectTuple[0] - rectangle[0]:
+                        bestFitSpace = space
 
-            if current.isEmpty and (rectangle[0] <= current.rectTuple[0]) and (rectangle[1] <= current.rectTuple[1]):
-                return current
-
-        return None
+        return bestFitSpace
 
     # Recursive call
     def findSpace(self, currentNode, rectangle):
@@ -247,26 +212,6 @@ class Tree:
         #     return self.findSpace(currentNode.rightChild, rectangle) or self.findSpace(currentNode.leftChild, rectangle)
 
     def findSpaceIt(selfself, rectangle):
-        # traversalStack = []
-        # currentNode = self.root
-        # done = 0
-        #
-        # while not done:
-        #     # if currentNode is not None and currentNode.isEmpty:
-        #     #     if (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
-        #     #         return currentNode
-        #
-        #     if currentNode is not None:
-        #         traversalStack.append(currentNode)
-        #         currentNode = currentNode.rightChild
-        #     else:
-        #         if len(traversalStack) > 0:
-        #             currentNode = traversalStack.pop()
-        #             if currentNode.isEmpty and (rectangle[0] <= currentNode.rectTuple[0]) and (rectangle[1] <= currentNode.rectTuple[1]):
-        #                 return currentNode
-        #             currentNode = currentNode.leftChild
-        #         else:
-        #             done = 1
         # current = self.root
         # parents = []
         # def descend_right(current):
@@ -284,20 +229,20 @@ class Tree:
 
     # Heuristic function for determining best way to add empty space.
     def growTree(self, rectangle):
-        can_go_down = rectangle[0] <= self.root.rectTuple[0]
-        can_go_right = rectangle[1] <= self.root.rectTuple[1]
+        goDown = rectangle[0] <= self.root.rectTuple[0]
+        goRight = rectangle[1] <= self.root.rectTuple[1]
 
-        should_go_down = can_go_down and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
-        should_go_right = can_go_right and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
+        defGoDown = goDown and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
+        defGoRight = goRight and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
 
-        # These two checks attempt to keep the working area square.
-        if should_go_right:
+        # These checks attempt to keep the working area square.
+        if defGoRight:
             return self.growTreeRight(rectangle)
-        elif should_go_down:
+        elif defGoDown:
             return self.growTreeDown(rectangle)
-        elif can_go_right:
+        elif goRight:
             return self.growTreeRight(rectangle)
-        elif can_go_down:
+        elif goDown:
             return self.growTreeDown(rectangle)
         else:
             return None
@@ -317,10 +262,12 @@ class Tree:
         newRoot.rightChild = Node(newRightChildSize, newRightChildCoords)
 
         self.root = newRoot
-        spaces.append(newRoot)
-        spaces.append(self.root.rightChild)
+        #Right child is new, add it to spaces collection
+        spaces.appendleft(newRoot.rightChild)
 
-        someNode = self.findSpace(self.root, rectangle)
+        someNode = self.root.rightChild
+        #someNode = self.findSpace(self.root.rightChild, rectangle)
+        # someNode = self.searchSpaces(rectangle)
         if someNode is not None:
             someNode.splitSpace(rectangle)
             return someNode
@@ -338,10 +285,12 @@ class Tree:
         newRoot.leftChild = Node(newLeftChildSize, newLeftChildCoords)
 
         self.root = newRoot
-        spaces.append(newRoot)
-        spaces.append(self.root.leftChild)
+        #Left child is new.  Add it to spaces.
+        spaces.appendleft(self.root.leftChild)
 
-        someNode = self.findSpace(self.root, rectangle)
+        someNode = self.root.leftChild
+        # someNode = self.findSpace(self.root.leftChild, rectangle)
+        # someNode = self.searchSpaces(rectangle)
         if someNode is not None:
             someNode.splitSpace(rectangle)
             return someNode
@@ -365,7 +314,7 @@ class Node:
 
     # This splits the node and adds new child nodes
     def splitSpace(self, rect):
-        #spaces.remove(self)
+        spaces.remove(self)
         self.isEmpty = False
 
         # Sizes for children
