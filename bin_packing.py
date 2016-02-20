@@ -166,8 +166,10 @@ class Tree:
         # When spaces gets too large, it just takes too long to go through it.
         # More than likely, our best fit will be early on in the list thanks to our sorting.
         # The bigger the number, the faster our solution.  However, it becomes less accurate.
-        if len(empty_spaces) > 1000:
-            ignore_size = len(empty_spaces)//3
+        if len(empty_spaces) > 2000:
+            ignore_size = len(empty_spaces)//5
+        elif len(empty_spaces) > 1000:
+            ignore_size = len(empty_spaces)//4
         elif len(empty_spaces) > 500:
             ignore_size = len(empty_spaces)//2
         else:
