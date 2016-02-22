@@ -73,6 +73,8 @@ target/
 
 # Sensitive or high-churn files:
 .idea/dataSources.ids
+/complex.txt
+/powersof2.txt
 .idea/dataSources.xml
 .idea/sqlDataSources.xml
 .idea/dynamic.xml
@@ -106,3 +108,4 @@ crashlytics.properties
 crashlytics-build.properties
 
 # Created by .ignore support plugin (hsz.mobi)
+/random.txt

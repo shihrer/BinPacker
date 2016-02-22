@@ -1,111 +1,12 @@
-# ----------------------------------------------
-# CSCI 338, Spring 2016, Bin Packing Assignment
-# Author: John Paxton
-# Last Modified: January 25, 2016
-# ----------------------------------------------
-# Modified to include find_naive_solution so that
-# driver does not need to be imported.  You may delete
-# find_naive_solution from your submission.
-# ----------------------------------------------
-
-"""
-FIND_NAIVE_SOLUTION:
-    Line the the top left corners of the rectangles up along
-the y = 0 axis starting with (0,0).
---------------------------------------------------
-rectangles: a list of tuples, e.g. [(w1, l1), ... (wn, ln)] where
-    w1 = width of rectangle 1,
-    l1 = length of rectangle 1, etc.
---------------------------------------------------
-RETURNS: a list of tuples that designate the top left corner placement,
-         e.g. [(x1, y1), ... (xn, yn)] where
-         x1 = top left x coordinate of rectangle 1 placement
-         y1 = top left y coordinate of rectangle 1 placement, etc.
-"""
 import operator
 from collections import deque
 import itertools
+class Packer:
+    def __init__(self):
+        self.Tree = None
 
 
-def find_naive_solution(rectangles):
-    placement = []
-    upper_left_x = 0
-    upper_left_y = 0
-
-    for rectangle in rectangles:
-        width = rectangle[0]
-        coordinate = (upper_left_x, upper_left_y)  # make a tuple
-        placement.insert(0, coordinate)  # insert tuple at front of list
-        upper_left_x = upper_left_x + width
-
-    placement.reverse()  # original order
-    return placement
-
-
-# -----------------------------------------------
-
-"""
-FIND_SOLUTION:
-    Define this function in bin_packing.py, along with any auxiliary
-functions that you need.  Do not change the driver.py file at all.
---------------------------------------------------
-rectangles: a list of tuples, e.g. [(w1, l1), ... (wn, ln)] where
-    w1 = width of rectangle 1,
-    l1 = length of rectangle 1, etc.
---------------------------------------------------
-RETURNS: a list of tuples that designate the top left corner placement,
-         e.g. [(x1, y1), ... (xn, yn)] where
-         x1 = top left x coordinate of rectangle 1 placement
-         y1 = top left y coordinate of rectangle 1 placement, etc.
-"""
-
-
-# ------------------------------------------------------
-#           CSCI 338, Bin Packing Assignment
-#             Michael Shihrer, Jake Morison
-#                   19 February 2016
-# ------------------------------------------------------
-#                 Solution Explanation
-# ------------------------------------------------------
-# First, the original order of the rectangle tuples must be saved.
-#   This is necessary in order to return the results list in the original order.
-# After, the rectangle tuples are sorted in decreasing order.
-#   Rectangles are sorted by height.
-#       If heights match, then sort by width.
-# We use a tree to represent the "space" available to place items.
-#   The root node represents the total size of our working space.
-#       Starting size just needs to be large enough to contain the first item.
-#   The tree grows.  This solves the dynamic programming problem of placing squares.
-#       We use previous work (placement of rectangles) to determine where to place a new rectangle.
-# For every rectangle tuple, we find an empty node large enough to fit it.
-# If a node is found, child nodes are created based off the remaining space.
-#   The left node represents space "below" the previously placed rectangle.
-#   The right node represents space "next" to the previously placed rectangle.
-# If no nodes are found that can fit a new node, we create more "space"
-#   We use heuristics to guess the best way to increase space.
-#       Our heuristics attempt to keep the overall working are a square.
-#   Increasing space creates a new root node for the tree.
-#   If space is added to the right of "full" space.
-#       New space is added as a right child.
-#       Otherwise, new space is added as a left child.
-# This process is continued for every rectangle.
-# ------------------------------------------------------
-#            Benefits to this solution
-# ------------------------------------------------------
-#   Sorting increases the efficiency of the solution greatly.
-#   Overlapping is not a concern.  We don't even have to check for it.
-#   As we place larger blocks, area for smaller blocks is created.
-# ------------------------------------------------------
-#                   Obstacles
-# ------------------------------------------------------
-# Recursion is slow.
-#   We optimized our solution from a runtime of about 30 seconds
-#       Currently can run 10,000 items in a second or so.
-# Our sort could be better.
-#   Items that are much wider than they are tall should be placed a little sooner.
-# ------------------------------------------------------
-
-def find_solution(rectangles):
+def find_solution(rectangles, throttle):
     sortedRectangles = []
     
     # Add original index location to rectangles - necessary for putting tuples back in order for results
@@ -120,7 +21,7 @@ def find_solution(rectangles):
     results = []
 
     # Create tree
-    packed_tree = Tree()
+    packed_tree = Tree(throttle)
 
     # Place sorted rectangles
     for rectangle in sortedRectangles:
@@ -141,8 +42,9 @@ def find_solution(rectangles):
 empty_spaces = deque()
 # The "tree" is more of a dynamic solution for placing rectangles
 class Tree:
-    def __init__(self):
+    def __init__(self, throttle):
         self.root = None
+        self.throttle = throttle
 
     def add(self, rectangle):
         if self.root is None:                                   # Check to see if we have initialized root node
@@ -160,26 +62,31 @@ class Tree:
         return currentNode                                      # Return answer.
 
     # Best-fit iterative search.
-    @staticmethod
-    def search_spaces(rectangle):
+    def search_spaces(self, rectangle):
+        best_fit = None
         # This is a trick to stop looping through the spaces list.
         # When spaces gets too large, it just takes too long to go through it.
         # More than likely, our best fit will be early on in the list thanks to our sorting.
         # The bigger the number, the faster our solution.  However, it becomes less accurate.
-        if len(empty_spaces) > 2000:
-            ignore_size = len(empty_spaces)//5
+        if not self.throttle:
+            ignore_size = len(empty_spaces)
+        elif len(empty_spaces) > 3000:
+            ignore_size = len(empty_spaces) // 5
+        elif len(empty_spaces) > 2000:
+            ignore_size = len(empty_spaces) // 5
         elif len(empty_spaces) > 1000:
-            ignore_size = len(empty_spaces)//4
+            ignore_size = len(empty_spaces) // 4
         elif len(empty_spaces) > 500:
-            ignore_size = len(empty_spaces)//2
+            ignore_size = len(empty_spaces) // 2
         else:
             ignore_size = len(empty_spaces)
-        best_fit = None
+
         for space in itertools.islice(empty_spaces, 0, ignore_size):
             # See if our space is a candidate
             if space.isEmpty and (rectangle[0] <= space.rectTuple[0]) and (rectangle[1] <= space.rectTuple[1]):
                 # We do!
                 best_fit = space
+                # return space
 
                 # Have we already found a candidate?
                 if best_fit:
@@ -199,6 +106,11 @@ class Tree:
         # Sometimes it's not bad to be square.
         defGoDown = goDown and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
         defGoRight = goRight and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
+
+        # if self.root.rectTuple[0] + rectangle[0] > self.root.rectTuple[1] + rectangle[1]:
+        #     defGoDown = True
+        # else:
+        #     defGoRight = True
 
         # These checks attempt to keep the working area square.
         if defGoRight:
@@ -232,6 +144,12 @@ class Tree:
         if self.root.rightChild.rectTuple[0] > 0 and self.root.rightChild.rectTuple[1] > 0:
             empty_spaces.appendleft(newRoot.rightChild)
 
+        # some_node = self.search_spaces(rectangle)
+        # if some_node:
+        #     some_node.splitSpace(rectangle)
+        #     return some_node
+        # else:
+        #     return None
         self.root.rightChild.splitSpace(rectangle)
         return self.root.rightChild
 
@@ -252,6 +170,12 @@ class Tree:
         if self.root.leftChild.rectTuple[0] > 0 and self.root.leftChild.rectTuple[1] > 0:
             empty_spaces.appendleft(self.root.leftChild)
 
+        # some_node = self.search_spaces(rectangle)
+        # if some_node:
+        #     some_node.splitSpace(rectangle)
+        #     return some_node
+        # else:
+        #     return None
         self.root.leftChild.splitSpace(rectangle)
         return self.root.leftChild
 
@@ -299,6 +223,5 @@ class Node:
             empty_spaces.appendleft(self.rightChild)
         else:
             self.rightChild.isEmpty = False
-
         # Change current node's size
         self.rectTuple = rect

@@ -23,6 +23,7 @@ RETURNS: nothing
   
 """
 
+
 def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
     file = open(file_name, "w")
     
@@ -46,8 +47,28 @@ def generate_file(file_name, min_dimension, max_dimension, number_rectangles):
         
     file.close()
 
-# generate_file("squares.txt", 1, 1000, 2500)
 
+def generate_squares(file_name, min_dimension, max_dimension, number_rectangles):
+    file = open(file_name, "w")
+
+    min_dimension = int(min_dimension)  # must be an integer
+    if min_dimension < 1:               # minimum value is 1
+        min_dimension = 1
+
+    max_dimension = int(max_dimension)  # must be an integer
+    if max_dimension > 1000:            # maximum value is 1000
+        max_dimension = 1000
+
+    if min_dimension > max_dimension:   # swap if necessary
+        temp = min_dimension
+        min_dimension = max_dimension
+        max_dimension = temp
+
+    for square in range(number_rectangles):
+        length = random.randint(min_dimension, max_dimension)
+        file.write(str(length) + " " + str(length) + "\n")
+
+    file.close()
 # -----------------------------------------------
 
 """
@@ -296,6 +317,3 @@ def solve_problem(file_name):
     print("Percentage Improvement Over Naive Solution =", 100 - (perimeter / naive_perimeter) * 100)
 
 # -----------------------------------------------
-
-# generate_file("squares.txt", 1, 1000, 5000)
-# solve_problem("squares.txt")
