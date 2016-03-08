@@ -60,7 +60,7 @@ class Tree:
         else:
             current_node = self.search_spaces(rectangle)          # Find space to fit.
             if current_node is not None:                         # Check to see if space was found.
-                current_node.splitSpace(rectangle)               # Create child nodes.
+                current_node.split_space(rectangle)               # Create child nodes.
             else:
                 current_node = self.grow_tree(rectangle)          # No space found.  Add more.
 
@@ -88,7 +88,7 @@ class Tree:
 
         for space in itertools.islice(empty_spaces, 0, ignore_size):
             # See if our space is a candidate
-            if space.isEmpty and (rectangle[0] <= space.rectTuple[0]) and (rectangle[1] <= space.rectTuple[1]):
+            if space.is_empty and (rectangle[0] <= space.rect_tuple[0]) and (rectangle[1] <= space.rect_tuple[1]):
                 # We do!
                 best_fit = space
                 # return space
@@ -96,21 +96,21 @@ class Tree:
                 # Have we already found a candidate?
                 if best_fit:
                     # See if our new candidate is better than the last.
-                    if space.rectTuple[0] - rectangle[0] < best_fit.rectTuple[0] - rectangle[0]:
+                    if space.rect_tuple[0] - rectangle[0] < best_fit.rect_tuple[0] - rectangle[0]:
                         best_fit = space
-                    elif space.rectTuple[1] - rectangle[1] < best_fit.rectTuple[1] - rectangle[1]:
+                    elif space.rect_tuple[1] - rectangle[1] < best_fit.rect_tuple[1] - rectangle[1]:
                         best_fit = space
 
         return best_fit
 
     # Determine which way to grow in order to add space.
     def grow_tree(self, rectangle):
-        go_down = rectangle[0] <= self.root.rectTuple[0]
-        go_right = rectangle[1] <= self.root.rectTuple[1]
+        go_down = rectangle[0] <= self.root.rect_tuple[0]
+        go_right = rectangle[1] <= self.root.rect_tuple[1]
 
         # Sometimes it's not bad to be square.
-        def_go_down = go_down and (self.root.rectTuple[0] >= (self.root.rectTuple[1] + rectangle[1]))
-        def_go_right = go_right and (self.root.rectTuple[1] >= (self.root.rectTuple[0] + rectangle[0]))
+        def_go_down = go_down and (self.root.rect_tuple[0] >= (self.root.rect_tuple[1] + rectangle[1]))
+        def_go_right = go_right and (self.root.rect_tuple[1] >= (self.root.rect_tuple[0] + rectangle[0]))
 
         # if self.root.rectTuple[0] + rectangle[0] > self.root.rectTuple[1] + rectangle[1]:
         #     defGoDown = True
@@ -146,7 +146,7 @@ class Tree:
         self.root = new_root
 
         # Right child is new. Add it to spaces only if it can fit something.
-        if self.root.right_child.rectTuple[0] > 0 and self.root.right_child.rectTuple[1] > 0:
+        if self.root.right_child.rect_tuple[0] > 0 and self.root.right_child.rect_tuple[1] > 0:
             empty_spaces.appendleft(new_root.right_child)
 
         # some_node = self.search_spaces(rectangle)
@@ -172,7 +172,7 @@ class Tree:
         self.root = new_root
 
         # Left child is new.  Add it to spaces only if it can fit something.
-        if self.root.left_child.rectTuple[0] > 0 and self.root.left_child.rectTuple[1] > 0:
+        if self.root.left_child.rect_tuple[0] > 0 and self.root.left_child.rect_tuple[1] > 0:
             empty_spaces.appendleft(self.root.left_child)
 
         # some_node = self.search_spaces(rectangle)
