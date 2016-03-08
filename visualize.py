@@ -17,10 +17,6 @@ def get_scale(screen_size, draw_size):
     return min(x_scale, y_scale)
 
 
-def scale_rectangle(result, scale_factor):
-    return result[0] * scale_factor, result[1] * scale_factor, result[2] * scale_factor, result[3] * scale_factor
-
-
 def draw_squares(solution, perimeter):
     pygame.init()
     dflags = pygame.RESIZABLE
@@ -66,20 +62,21 @@ def start_packer(file_name, validate, throttle, visualize, recursive):
 
     # get student solution and measure tie
     start = time.time()
-    upper_left_coordinates = bin_packing.find_solution(clone, throttle)
+    results = bin_packing.find_solution(clone, throttle)
     time_elapsed = time.time() - start
     print("Time elapsed in seconds =", time_elapsed)
 
     # convert student solution to show upper left and lower right coordinates
-    rectangle_coordinates = corner_coordinates(rectangles, upper_left_coordinates)
+    rectangle_coordinates = corner_coordinates(results)
 
     # get a solution using the naive method
-    naive_left_coordinates = find_naive_solution(rectangles)
-    naive_rectangle_coordinates = corner_coordinates(rectangles, naive_left_coordinates)
+    naive_results = find_naive_solution(rectangles)
+    naive_rectangle_coordinates = corner_coordinates(naive_results)
     naive_perimeter = evaluate_solution(naive_rectangle_coordinates)
     print("Bounding Rectangle Perimeter of Naive Solution =", naive_perimeter)
     perimeter = evaluate_solution(rectangle_coordinates)
     print("Bounding Rectangle Perimeter of Your Solution =", perimeter)
+
     if time_elapsed > 5.0:  # is student solution fast enough?
         print("Error.  Time Limit Exceeded.")
 
@@ -88,9 +85,9 @@ def start_packer(file_name, validate, throttle, visualize, recursive):
 
     print("Percentage Improvement Over Naive Solution =", 100 - (perimeter / naive_perimeter) * 100)
 
-    visualizeTuples = []
+    visualize_tuples = []
 
-    tuple = upper_left_coordinates[0]  # grab first tuple of solution
+    tuple = results[0]  # grab first tuple of solution
     tuple2 = rectangles[0]
     global min_x, max_y, max_x, min_y
 
@@ -99,13 +96,11 @@ def start_packer(file_name, validate, throttle, visualize, recursive):
     max_x = tuple[0]  # initializing largest x
     min_y = tuple[1]  # initializing smallest y
 
-    for rectangle, dimension in zip(upper_left_coordinates, rectangles):
-        visualizeTuples.append((rectangle[0], -rectangle[1]) + dimension)
-
-        top_left_x = rectangle[0]
-        top_left_y = rectangle[1]
-        lower_right_x = rectangle[0] + dimension[0]
-        lower_right_y = rectangle[1] + dimension[1]
+    for result in results:
+        top_left_x = result[0]
+        top_left_y = result[1]
+        lower_right_x = result[0] + result[2]
+        lower_right_y = result[1] + result[3]
 
         if top_left_x < min_x:  # find smallest x value
             min_x = top_left_x
@@ -119,7 +114,7 @@ def start_packer(file_name, validate, throttle, visualize, recursive):
     print(perimeter_tuple)
 
     if visualize:
-        draw_squares(visualizeTuples, perimeter_tuple)
+        draw_squares(results, perimeter_tuple)
 
 
 def pastel_generator(mix):
@@ -136,16 +131,15 @@ def pastel_generator(mix):
 
 # generate parameters
 file_name = "random.txt"
-file_name2 = "powersof2.txt"
 min_value = 1
 max_value = 100
-set_size = 10000
+set_size = 20
 
 # solution parameters
-validate = False
+validate = True
 throttle = False
 visualize = True
 recursive = True
 
 generate_file(file_name, min_value, max_value, set_size)
-visualize_problem(file_name, validate, throttle, visualize, recursive)
+start_packer(file_name, validate, throttle, visualize, recursive)

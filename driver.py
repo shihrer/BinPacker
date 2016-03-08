@@ -95,10 +95,9 @@ def find_naive_solution (rectangles):
     for rectangle in rectangles:
         width = rectangle[0]
         coordinate = (upper_left_x, upper_left_y)   # make a tuple
-        placement.insert(0, coordinate)             # insert tuple at front of list
+        placement.append(rectangle + coordinate)             # insert tuple at front of list
         upper_left_x = upper_left_x + width
-        
-    placement.reverse()                             # original order
+
     return placement
 
 # -----------------------------------------------
@@ -165,19 +164,16 @@ RETURNS: a list of tuples, e.g. [(a1, b1, c1, d1), ... (an, bn, cn, dn)] where
 """
 
 
-def corner_coordinates (dimensions, upper_left):   
+def corner_coordinates(rectangles):
     answer = []
     
-    for i in range(len(dimensions)):
-        coordinate = upper_left[i]      # (x, y) of upper left
-        dimension = dimensions[i]       # (width, length) of rectangle
-        upper_x = coordinate[0]
-        upper_y = coordinate[1]
-        lower_x = upper_x + dimension[0]
-        lower_y = upper_y - dimension[1]
-        answer.insert(0, (upper_x, upper_y, lower_x, lower_y))
-        
-    answer.reverse()                    # original order
+    for rectangle in rectangles:
+        upper_x = rectangle[0]
+        upper_y = rectangle[1]
+        lower_x = upper_x + rectangle[2]
+        lower_y = upper_y - rectangle[3]
+        answer.append((upper_x, upper_y, lower_x, lower_y))
+
     return answer
 
 # -----------------------------------------------

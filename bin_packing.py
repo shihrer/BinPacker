@@ -9,42 +9,26 @@ class Packer:
 
 
 def find_solution(rectangles, throttle):
-    sorted_rectangles = []
-    
-    # Add original index location to rectangles - necessary for putting tuples back in order for results
-    # Probably a more pythonic way to do this...
-    for i, rectangle in enumerate(rectangles):
-        new_tuple = rectangle + (i,)
-        sorted_rectangles.append(new_tuple)
 
     # Sort rectangles by height then width.
     # Going for a decreasing height, decreasing width best fit type of solution.
-    sorted_rectangles.sort(key=operator.itemgetter(1, 0), reverse=True)
+    rectangles.sort(key=operator.itemgetter(1, 0), reverse=True)
     results = []
 
     # Create tree
     packed_tree = Tree(throttle)
 
     # Place sorted rectangles
-    for rectangle in sorted_rectangles:
+    for rectangle in rectangles:
         result = packed_tree.add(rectangle)
-        results.append(result.rect_tuple + result.coordinates)
-
-    # Return results to original order
-    results.sort(key=operator.itemgetter(2))
-
-    # get just the results (coordinates).  Each rectangle tuple has the coordinates in indices 3&4.
-    # Make sure to set the "y" coordinate to be negative.
-    result_tuples = []
-    for result in results:
-        result_tuples.append((result[3], -result[4]))
+        results.append(result.coordinates + result.rect_tuple)
         
-    return result_tuples
+    return results
 
 empty_spaces = deque()
+
+
 # The "tree" is more of a dynamic solution for placing rectangles
-
-
 class Tree:
     def __init__(self, throttle):
         self.root = None
@@ -165,7 +149,7 @@ class Tree:
         new_root.right_child = self.root
 
         new_left_childize = (self.root.rect_tuple[0], rectangle[1])
-        new_left_childcoords = (0, self.root.rect_tuple[1], rectangle[2])
+        new_left_childcoords = (0, self.root.rect_tuple[1])
         new_root.left_child = Node(new_left_childize, new_left_childcoords)
 
         # Replace old root
