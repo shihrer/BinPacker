@@ -143,6 +143,7 @@ empty_spaces = deque()
 class Tree:
     def __init__(self):
         self.root = None
+        empty_spaces.clear()
 
     def add(self, rectangle):
         if self.root is None:                                   # Check to see if we have initialized root node
