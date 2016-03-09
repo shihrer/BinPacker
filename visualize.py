@@ -133,7 +133,7 @@ def pastel_generator(mix):
 file_name = "random.txt"
 min_value = 1
 max_value = 100
-set_size = 20
+set_size = 5000
 
 # solution parameters
 validate = True
