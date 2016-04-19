@@ -61,8 +61,15 @@ class Packer:
 
         some_node.size = size
 
-        self.empty_nodes.appendleft(some_node.down)
-        self.empty_nodes.appendleft(some_node.right)
+        if some_node.down.size[0] > 0 and some_node.down.size[1] > 0:
+            self.empty_nodes.appendleft(some_node.down)
+        else:
+            some_node.used = True
+
+        if some_node.right.size[0] > 0 and some_node.right.size[1] > 0:
+            self.empty_nodes.appendleft(some_node.right)
+        else:
+            some_node.used = True
 
         return Block(some_node.location, size)
 
@@ -93,7 +100,8 @@ class Packer:
 
         self.root = new_root
 
-        self.empty_nodes.appendleft(self.root.right)
+        if self.root.right.size[0] > 0 and self.root.right.size[1] > 0:
+            self.empty_nodes.appendleft(self.root.right)
 
         # return self.split_node(self.root.right, size)
 
@@ -113,7 +121,8 @@ class Packer:
 
         self.root = new_root
 
-        self.empty_nodes.appendleft(self.root.down)
+        if self.root.down.size[0] > 0 and self.root.down.size[1] > 0:
+            self.empty_nodes.appendleft(self.root.down)
 
         # return self.split_node(self.root.down, size)
 
