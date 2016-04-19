@@ -1,198 +1,127 @@
-import itertools
 from collections import deque
 
 
 class Packer:
-    def __init__(self, throttle):
+    def __init__(self):
         self.root = None
-        self.throttle = throttle
-        self.empty_spaces = deque()
+        self.recursive = True
+        self.empty_nodes = deque()
 
     def pack(self, rectangles):
+        blocks = []
+
         for rectangle in rectangles:
-            self.add(rectangle)
+            if not self.root:
+                self.root = Node((0, 0), rectangles[0])
+                some_node = self.root
+            else:
+                some_node = self.find_node(rectangle)
+
+            if some_node is not None:
+                blocks.append(self.split_node(some_node, rectangle))
+            else:
+                blocks.append(self.grow_node(rectangle))
+
+        return blocks
+
+    def find_node(self, size):
+        if self.recursive:
+            return self.find_node_r(self.root, size)
+
         return None
 
-    def add(self, rectangle):
-        if self.root is None:                                   # Check to see if we have initialized root node
-            self.root = Node(rectangle, (0, 0), self.empty_spaces)                 # Root node originates at(0,0).
-            self.empty_spaces.append(self.root)
-            self.root.split_space(rectangle)                     # Create space for next root.
-            current_node = self.root                             # Place answer in this root.
-            block = None
-        else:
-            current_node = self.search_spaces(rectangle)          # Find space to fit.
-            if current_node is not None:                         # Check to see if space was found.
-                block = current_node.split_space(rectangle)               # Create child nodes.
-            else:
-                block = current_node = self.grow_tree(rectangle)          # No space found.  Add more.
+    def find_node_r(self, some_node, size):
 
-        return block                                      # Return answer.
+        if some_node.used:
+            return self.find_node_r(some_node.right, size) or self.find_node_r(some_node.down, size)
+        elif some_node.fits(size):
+            return some_node
 
-    # Best-fit iterative search.
-    def search_spaces(self, rectangle):
-        best_fit = None
-        # This is a trick to stop looping through the spaces list.
-        # When spaces gets too large, it just takes too long to go through it.
-        # More than likely, our best fit will be early on in the list thanks to our sorting.
-        # The bigger the number, the faster our solution.  However, it becomes less accurate.
-        if not self.throttle:
-            ignore_size = len(self.empty_spaces)
-        elif len(self.empty_spaces) > 3000:
-            ignore_size = len(self.empty_spaces) // 5
-        elif len(self.empty_spaces) > 2000:
-            ignore_size = len(self.empty_spaces) // 5
-        elif len(self.empty_spaces) > 1000:
-            ignore_size = len(self.empty_spaces) // 4
-        elif len(self.empty_spaces) > 500:
-            ignore_size = len(self.empty_spaces) // 2
-        else:
-            ignore_size = len(self.empty_spaces)
+        return None
 
-        for space in itertools.islice(self.empty_spaces, 0, ignore_size):
-            # See if our space is a candidate
-            if space.is_empty and (rectangle[0] <= space.rect_tuple[0]) and (rectangle[1] <= space.rect_tuple[1]):
-                # We do!
-                best_fit = space
-                # return space
+    def split_node(self, some_node, size):
+        some_node.used = True
 
-                # Have we already found a candidate?
-                if best_fit:
-                    # See if our new candidate is better than the last.
-                    if space.rect_tuple[0] - rectangle[0] < best_fit.rect_tuple[0] - rectangle[0]:
-                        best_fit = space
-                    elif space.rect_tuple[1] - rectangle[1] < best_fit.rect_tuple[1] - rectangle[1]:
-                        best_fit = space
+        some_node.down = Node((some_node.location[0], some_node.location[1] + size[1]),
+                              (some_node.size[0], some_node.size[1] - size[1]))
+        some_node.right = Node((some_node.location[0] + size[0], some_node.location[1]),
+                               (some_node.size[0] - size[0], size[1]))
 
-        return best_fit
+        some_node.size = size
+        return Block(some_node.location, size)
 
-    # Determine which way to grow in order to add space.
-    def grow_tree(self, rectangle):
-        go_down = rectangle[0] <= self.root.rect_tuple[0]
-        go_right = rectangle[1] <= self.root.rect_tuple[1]
+    def grow_node(self, size):
+        can_go_down = size[0] <= self.root.size[0]
+        can_go_right = size[1] <= self.root.size[1]
 
-        # Sometimes it's not bad to be square.
-        def_go_down = go_down and (self.root.rect_tuple[0] >= (self.root.rect_tuple[1] + rectangle[1]))
-        def_go_right = go_right and (self.root.rect_tuple[1] >= (self.root.rect_tuple[0] + rectangle[0]))
+        should_go_down = can_go_down and (self.root.size[0] >= (self.root.size[1] + size[1]))
+        should_go_right = can_go_right and (self.root.size[1] >= (self.root.size[0] + size[0]))
 
-        # if self.root.rectTuple[0] + rectangle[0] > self.root.rectTuple[1] + rectangle[1]:
-        #     defGoDown = True
-        # else:
-        #     defGoRight = True
+        if should_go_right:
+            return self.grow_right(size)
+        elif should_go_down:
+            return self.grow_down(size)
+        elif can_go_right:
+            return self.grow_right(size)
+        elif can_go_down:
+            return self.grow_down(size)
 
-        # These checks attempt to keep the working area square.
-        if def_go_right:
-            return self.grow_tree_right(rectangle)
-        elif def_go_down:
-            return self.grow_tree_down(rectangle)
-        elif go_right:
-            return self.grow_tree_right(rectangle)
-        elif go_down:
-            return self.grow_tree_down(rectangle)
-        else:
-            return None # this is bad.  Avoid this!
+        return None
 
-    # Create new root nodes.
-    # Swap in new root.
-    # Put old root in proper child.
-    # I could probably generalize this...out of time
-    def grow_tree_right(self, rectangle):
-        new_root_dimensions = (self.root.rect_tuple[0] + rectangle[0], self.root.rect_tuple[1])
-        new_root = Node(new_root_dimensions, (0, 0), self.empty_spaces)
-        new_root.is_empty = False
-        new_root.left_child = self.root
-
-        new_right_childsize = (rectangle[0], self.root.rect_tuple[1])
-        new_right_childcoords = (self.root.rect_tuple[0], 0)
-        new_root.right_child = Node(new_right_childsize, new_right_childcoords, self.empty_spaces)
+    def grow_right(self, size):
+        new_root = Node((0, 0), (self.root.size[0] + size[0], self.root.size[1]))
+        new_root.used = True
+        new_root.down = self.root
+        new_root.right = Node((self.root.size[0], 0),
+                              (size[0], self.root.size[1]))
 
         self.root = new_root
 
-        # Right child is new. Add it to spaces only if it can fit something.
-        if self.root.right_child.rect_tuple[0] > 0 and self.root.right_child.rect_tuple[1] > 0:
-            self.empty_spaces.appendleft(new_root.right_child)
+        # return self.split_node(self.root.right, size)
 
-        # some_node = self.search_spaces(rectangle)
-        # if some_node:
-        #     some_node.splitSpace(rectangle)
-        #     return some_node
-        # else:
-        #     return None
-        self.root.right_child.split_space(rectangle)
-        return self.root.right_child
+        some_node = self.find_node(size)
 
-    def grow_tree_down(self, rectangle):
-        new_root_dimensions = (self.root.rect_tuple[0], self.root.rect_tuple[1] + rectangle[1])
-        new_root = Node(new_root_dimensions, (0, 0), self.empty_spaces)
-        new_root.is_empty = False
-        new_root.right_child = self.root
+        if some_node:
+            return self.split_node(some_node, size)
 
-        new_left_childize = (self.root.rect_tuple[0], rectangle[1])
-        new_left_childcoords = (0, self.root.rect_tuple[1])
-        new_root.left_child = Node(new_left_childize, new_left_childcoords, self.empty_spaces)
+        return None
 
-        # Replace old root
+    def grow_down(self, size):
+        new_root = Node((0, 0), (self.root.size[0], self.root.size[1] + size[1]))
+        new_root.used = True
+        new_root.right = self.root
+        new_root.down = Node((0, self.root.size[1]),
+                             (self.root.size[0], size[1]))
+
         self.root = new_root
 
-        # Left child is new.  Add it to spaces only if it can fit something.
-        if self.root.left_child.rect_tuple[0] > 0 and self.root.left_child.rect_tuple[1] > 0:
-            self.empty_spaces.appendleft(self.root.left_child)
+        # return self.split_node(self.root.down, size)
 
-        # some_node = self.search_spaces(rectangle)
-        # if some_node:
-        #     some_node.splitSpace(rectangle)
-        #     return some_node
-        # else:
-        #     return None
-        self.root.left_child.split_space(rectangle)
-        return self.root.left_child
+        some_node = self.find_node(size)
+
+        if some_node:
+            return self.split_node(some_node, size)
+
+        return None
+
 
 class Node:
-    def __init__(self, rectangle, coords, empty_spaces):
-        self.left_child = None
-        self.right_child = None
+    def __init__(self, location, size):
+        self.used = False
+        self.down = None
+        self.right = None
+        self.location = location
+        self.size = size
 
-        # Stores the width/height of node
-        self.rect_tuple = rectangle
-        # Stores the upper left coordinates of node
-        self.coordinates = coords
-        # Just states that there is something placed in the current node.
-        self.is_empty = True
-        self.empty_spaces = empty_spaces
-
-    # This splits the node and adds new child nodes
-    def split_space(self, rect):
-        # Remove space since it's no longer empty.  Might not really help since it takes time to delete.
-        self.empty_spaces.remove(self)
-        self.is_empty = False
-
-        # Sizes for new children
-        new_left_dimen = (self.rect_tuple[0], self.rect_tuple[1] - rect[1])
-        new_right_dimen = (self.rect_tuple[0] - rect[0], rect[1])
-
-        # Starting coordinates for new children
-        new_left_coords = (self.coordinates[0], self.coordinates[1] + rect[1])
-        new_right_coords = (self.coordinates[0] + rect[0], self.coordinates[1])
-
-        # create child nodes
-        self.left_child = Node(new_left_dimen, new_left_coords)
-        self.right_child = Node(new_right_dimen, new_right_coords)
-
-        # Add these nodes to our spaces list.
-        # Only if they could possibly fit something in the future.
-        # Major optimization since sometimes child nodes will have a dimension of zero
-        if self.left_child.rect_tuple[0] > 0 and self.left_child.rect_tuple[1] > 0:
-            self.empty_spaces.appendleft(self.left_child)
+    def fits(self, size):
+        if size[0] <= self.size[0] and size[1] <= self.size[1]:
+            return True
         else:
-            self.left_child.is_empty = False
-        if self.right_child.rect_tuple[0] > 0 and self.right_child.rect_tuple[0] > 0:
-            self.empty_spaces.appendleft(self.right_child)
-        else:
-            self.right_child.is_empty = False
-        # Change current node's size
-        self.rect_tuple = rect
+            return False
+
 
 class Block:
-    def __init__(self, rect_tuple, coord_tuple):
-        self.rectangle = rect_tuple
-        self.coordinates = coord_tuple
+    def __init__(self, location, size):
+        self.size = size
+        self.location = location
+        self.rect = location + size
