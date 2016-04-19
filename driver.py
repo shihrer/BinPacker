@@ -6,9 +6,10 @@
 
 import random
 import time
-import bin_packing
 
 # -----------------------------------------------
+from Packer import Packer
+from Visualizer import Visualizer
 
 """
 GENERATE_FILE:
@@ -69,7 +70,6 @@ def generate_squares(file_name, min_dimension, max_dimension, number_rectangles)
         file.write(str(length) + " " + str(length) + "\n")
 
     file.close()
-# -----------------------------------------------
 
 """
 FIND_NAIVE_SOLUTION:
@@ -267,49 +267,55 @@ def read_file(file_name):
     rectangles.reverse()                # original order
     return rectangles
 
-# -----------------------------------------------
+def solve_problem(file_name, rectangles):
+    packer = Packer()
 
-"""
-SOLVE_PROBLEM:
-    This is the main driver function.
---------------------------------------------------
-file_name: name of the input file
---------------------------------------------------
-RETURNS: nothing
-"""
-
-
-def solve_problem(file_name):
-    rectangles = read_file(file_name)    
+    #rectangles = read_file(file_name)
     clone = rectangles[:]       # clone so that original info retained
 
     # get student solution and measure tie
     start = time.time()
-    upper_left_coordinates = bin_packing.find_solution(clone)
+    results = packer.pack(rectangles, throttle)
     time_elapsed = time.time() - start
+
     print("Time elapsed in seconds =", time_elapsed)
 
-    # convert student solution to show upper left and lower right coordinates
-    rectangle_coordinates = corner_coordinates(rectangles, upper_left_coordinates)
-
     # get a solution using the naive method
-    naive_left_coordinates = find_naive_solution(rectangles)
-    naive_rectangle_coordinates = corner_coordinates(rectangles, naive_left_coordinates)
-    naive_perimeter = evaluate_solution(naive_rectangle_coordinates)
+    naive_results = find_naive_solution(rectangles)
+    naive_perimeter = evaluate_solution(naive_results)
     print("Bounding Rectangle Perimeter of Naive Solution =", naive_perimeter)
 
-
-    if is_solution_valid (rectangle_coordinates):   # is student solution valid?
-        perimeter = evaluate_solution(rectangle_coordinates)
-        print("Bounding Rectangle Perimeter of Your Solution =", perimeter)
+    if is_solution_valid (results):   # is solution valid?
+        perimeter = evaluate_solution(results)
+        print("Bounding Rectangle Perimeter of Solution =", perimeter)
         if time_elapsed > 5.0:                      # is student solution fast enough?
             print("Error.  Time Limit Exceeded.")
-            # perimeter = 2 * naive_perimeter         # answer is penalized
         
     else:
         print("Error.  Overlapping Rectangles in Solution.")
-        perimeter = 2 * naive_perimeter             # answer is penalized
 
-    print("Percentage Improvement Over Naive Solution =", 100 - (perimeter / naive_perimeter) * 100)
+    print("Improvement Over Naive Solution =", 100 - (perimeter / naive_perimeter) * 100)
+
+    return None
 
 # -----------------------------------------------
+if __name__ == "__main__":
+    # generate parameters
+    file_name = "random.txt"
+    min_value = 1
+    max_value = 100
+    set_size = 200
+
+    generate_file(file_name, min_value, max_value, set_size)
+
+    # solution parameters
+    validate = True
+    throttle = False
+    visualize = True
+    recursive = True
+
+    rectangles = None
+    results = solve_problem(file_name, rectangles)
+
+    if visualize:
+        visualizer = Visualizer()
