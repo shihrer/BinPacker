@@ -171,7 +171,7 @@ def corner_coordinates(rectangles):
         upper_x = rectangle[0]
         upper_y = rectangle[1]
         lower_x = upper_x + rectangle[2]
-        lower_y = upper_y - rectangle[3]
+        lower_y = upper_y + rectangle[3]
         answer.append((upper_x, upper_y, lower_x, lower_y))
 
     return answer
