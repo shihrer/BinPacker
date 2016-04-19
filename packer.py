@@ -4,7 +4,7 @@ from collections import deque
 class Packer:
     def __init__(self):
         self.root = None
-        self.recursive = True
+        self.recursive = False
         self.empty_nodes = deque()
 
     def pack(self, rectangles):
@@ -14,6 +14,7 @@ class Packer:
             if not self.root:
                 self.root = Node((0, 0), rectangles[0])
                 some_node = self.root
+                self.empty_nodes.append(self.root)
             else:
                 some_node = self.find_node(rectangle)
 
@@ -27,8 +28,18 @@ class Packer:
     def find_node(self, size):
         if self.recursive:
             return self.find_node_r(self.root, size)
+        else:
+            best_fit = None
 
-        return None
+            for node in self.empty_nodes:
+                if not node.used and node.fits(size):
+                    if best_fit:
+                        if node.size[0] - size[0] < best_fit.size[0] - size[0] or node.size[1] - size[1] < best_fit.size[1] - size[1]:
+                            best_fit = node
+                    else:
+                        best_fit = node
+
+            return best_fit
 
     def find_node_r(self, some_node, size):
 
@@ -41,6 +52,7 @@ class Packer:
 
     def split_node(self, some_node, size):
         some_node.used = True
+        self.empty_nodes.remove(some_node)
 
         some_node.down = Node((some_node.location[0], some_node.location[1] + size[1]),
                               (some_node.size[0], some_node.size[1] - size[1]))
@@ -48,6 +60,10 @@ class Packer:
                                (some_node.size[0] - size[0], size[1]))
 
         some_node.size = size
+
+        self.empty_nodes.appendleft(some_node.down)
+        self.empty_nodes.appendleft(some_node.right)
+
         return Block(some_node.location, size)
 
     def grow_node(self, size):
@@ -77,6 +93,8 @@ class Packer:
 
         self.root = new_root
 
+        self.empty_nodes.appendleft(self.root.right)
+
         # return self.split_node(self.root.right, size)
 
         some_node = self.find_node(size)
@@ -94,6 +112,8 @@ class Packer:
                              (self.root.size[0], size[1]))
 
         self.root = new_root
+
+        self.empty_nodes.appendleft(self.root.down)
 
         # return self.split_node(self.root.down, size)
 
