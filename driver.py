@@ -91,6 +91,7 @@ def find_solution(rectangles):
     rectangles.sort(key=operator.itemgetter(1, 0), reverse=True)
     return Packer.pack(Packer(), rectangles)
 
+
 class SolutionBounds():
     def __init__(self, dimensions):
         self.dimensions = dimensions
@@ -98,9 +99,10 @@ class SolutionBounds():
     def get_perimeter(self):
         return (self.dimensions[0] + self.dimensions[1]) * 2
 
+
 # Runs the code.
 if __name__ == "__main__":
-    generate_file(1,100,500)
+    generate_file(1, 100, 500)
     rectangles = read_file("random.txt")
 
     naive_results = naive_solution(rectangles)
@@ -119,7 +121,8 @@ if __name__ == "__main__":
 
     print("Perimeter of solution is {}.".format(solution_space.get_perimeter()))
     print("Permiter of naive solution is {}.".format(naive_space.get_perimeter()))
-    print("Pecentage improvement is {}.".format((100-(solution_space.get_perimeter()/naive_space.get_perimeter()) * 100)))
+    print("Pecentage improvement is {}.".format(
+        (100 - (solution_space.get_perimeter() / naive_space.get_perimeter()) * 100)))
 
     visualizer = Visualize(my_results, solution_space)
     visualizer.display()
