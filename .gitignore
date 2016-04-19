@@ -1,3 +1,4 @@
+/data
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -66,6 +67,15 @@ target/
 /.idea/
 
 
+# Sensitive or high-churn files:
+.idea/dataSources.ids
+/complex.txt
+/powersof2.txt
+.idea/dataSources.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+
 ## User-specific stuff:
 #.idea/workspace.xml
 #.idea/tasks.xml
@@ -106,5 +116,7 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
+# Created by .ignore support plugin (hsz.mobi)
+/random.txt
 # Resources
 *.txt

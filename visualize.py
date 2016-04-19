@@ -1,116 +1,69 @@
 import pygame
-import sys
+import random
 import time
-import bin_packing
-from driver import read_file, corner_coordinates, find_naive_solution, evaluate_solution, is_solution_valid, \
-    generate_file, solve_problem
 
-min_x = 0
-max_y = 0
-max_x = 0
-min_y = 0
+import sys
 
-def visualize_problem(file_name):
-    rectangles = read_file(file_name)
-    clone = rectangles[:]       # clone so that original info retained
-
-    # get student solution and measure tie
-    start = time.time()
-    upper_left_coordinates = bin_packing.find_solution(clone)
-    time_elapsed = time.time() - start
-    print("Time elapsed in seconds =", time_elapsed)
-
-    # convert student solution to show upper left and lower right coordinates
-    rectangle_coordinates = corner_coordinates(rectangles, upper_left_coordinates)
-
-    # get a solution using the naive method
-    naive_left_coordinates = find_naive_solution(rectangles)
-    naive_rectangle_coordinates = corner_coordinates(rectangles, naive_left_coordinates)
-    naive_perimeter = evaluate_solution(naive_rectangle_coordinates)
-    print("Bounding Rectangle Perimeter of Naive Solution =", naive_perimeter)
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 0, 0)
 
 
-    if is_solution_valid (rectangle_coordinates):   # is student solution valid?
-        perimeter = evaluate_solution(rectangle_coordinates)
-        print("Bounding Rectangle Perimeter of Your Solution =", perimeter)
-        if time_elapsed > 5.0:                      # is student solution fast enough?
-            print("Error.  Time Limit Exceeded.")
-            # perimeter = 2 * naive_perimeter         # answer is penalized
+def pastel_mixer(mix):
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
 
-    else:
-        print("Error.  Overlapping Rectangles in Solution.")
-        perimeter = 2 * naive_perimeter             # answer is penalized
+    if mix:
+        r = (r + mix[0]) // 2
+        g = (g + mix[1]) // 2
+        b = (b + mix[2]) // 2
 
-    print("Percentage Improvement Over Naive Solution =", 100 - (perimeter / naive_perimeter) * 100)
+    return r, g, b
 
-    visualizeTuples = []
 
-    tuple = upper_left_coordinates[0]              # grab first tuple of solution
-    tuple2 = rectangles[0]
-    global min_x, max_y, max_x, min_y
+class Visualize:
+    def __init__(self, blocks, solution_space):
+        self.size = (800, 600)
+        self.dflags = pygame.RESIZABLE
+        self.blocks = blocks
+        self.solution_space = solution_space
+        self.screen = pygame.display.set_mode(self.size, self.dflags)
+        self.rectangles_surface = pygame.Surface(self.solution_space.dimensions)
 
-    min_x = tuple[0]                    # initializing smallest x
-    max_y = tuple[1]                    # initializing largest y
-    max_x = tuple[0]                    # initializing largest x
-    min_y = tuple[1]                    # initializing smallest y
+    def display(self):
+        pygame.init()
 
-    for rectangle, dimension in zip(upper_left_coordinates, rectangles):
-        visualizeTuples.append((rectangle[0], -rectangle[1]) + dimension)
+        self.screen.fill(red)
+        self.rectangles_surface.fill(red)
 
-        top_left_x = rectangle[0]
-        top_left_y = rectangle[1]
-        lower_right_x = rectangle[0] + dimension[0]
-        lower_right_y = rectangle[1] + dimension[1]
+        self.draw_squares()
+        while True:
+            # check for quit events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.VIDEORESIZE:
+                    self.size = event.dict['size']
+                    self.screen = pygame.display.set_mode(self.size, self.dflags)
 
-        if top_left_x < min_x:          # find smallest x value
-            min_x = top_left_x
-        if lower_right_x > max_x:       # find largest x value
-            max_x = lower_right_x
-        if top_left_y > max_y:          # find largest y value
-            max_y = top_left_y
-        if lower_right_y < min_y:       # find smallest y value
-            min_y = lower_right_y
+            # update the screen
+            self.update_screen()
 
-    return visualizeTuples
+    def get_scale(self):
+        pass
 
-# for i in range(1,70):
-#     generate_file("squares.txt", 1, 1000, 10000)
-#     rectangles = visualize_problem("squares.txt")
+    def draw_squares(self):
+        for block in self.blocks:
+            pygame.draw.rect(self.rectangles_surface, pastel_mixer(white), block.rect, 0)
+            pygame.draw.rect(self.rectangles_surface, black, block.rect, 1)
 
-generate_file("visualSquares.txt", 1, 500, 2000)
-rectangles = visualize_problem("squares2.txt")
-# generate_file("squares.txt", 1, 1000, 10000)
-# solve_problem("squares.txt")
+    def update_screen(self):
+        self.screen.fill(red)
+        if self.solution_space.dimensions > self.size:
+            self.screen.blit(pygame.transform.smoothscale(self.rectangles_surface, self.size), (0, 0))
+        else:
+            self.screen.blit(self.rectangles_surface, (0, 0))
 
-pygame.init()
-dflags = pygame.RESIZABLE
-size = (800,600)
-rectangles_perimeter = ((max_x - min_x) + 50, (max_y - min_y) + 50)
-screen = pygame.display.set_mode(size, dflags)
-rectangles_surface = pygame.Surface(rectangles_perimeter)
-
-print(rectangles_perimeter)
-
-red = (255,0,0)
-black = (0,0,0)
-white = (255,255,255)
-
-while True:
-    # check for quit events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit(); sys.exit();
-        if event.type == pygame.VIDEORESIZE:
-            size = event.dict['size']
-            screen = pygame.display.set_mode(size, dflags)
-
-    rectangles_surface.fill(white)
-
-    for rectangle in rectangles:
-        pygame.draw.rect(rectangles_surface, red, rectangle, 0)
-        pygame.draw.rect(rectangles_surface, black, rectangle, 1)
-
-    screen.blit(pygame.transform.smoothscale(rectangles_surface, size), (0, 0))
-
-    # update the screen
-    pygame.display.update()
+        pygame.display.update()
