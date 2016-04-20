@@ -42,11 +42,11 @@ class Packer:
             return best_fit
 
     def find_node_r(self, some_node, size):
-
-        if some_node.used:
-            return self.find_node_r(some_node.right, size) or self.find_node_r(some_node.down, size)
-        elif some_node.fits(size):
-            return some_node
+        if some_node:
+            if some_node.used:
+                return self.find_node_r(some_node.right, size) or self.find_node_r(some_node.down, size)
+            elif some_node.fits(size):
+                return some_node
 
         return None
 
@@ -54,22 +54,20 @@ class Packer:
         some_node.used = True
         self.empty_nodes.remove(some_node)
 
-        some_node.down = Node((some_node.location[0], some_node.location[1] + size[1]),
-                              (some_node.size[0], some_node.size[1] - size[1]))
-        some_node.right = Node((some_node.location[0] + size[0], some_node.location[1]),
-                               (some_node.size[0] - size[0], size[1]))
+        # Check to see if there's space to even split
+        if some_node.size[1] - size[1] > 0:
+            some_node.down = Node((some_node.location[0], some_node.location[1] + size[1]),
+                                  (some_node.size[0], some_node.size[1] - size[1]))
+
+            self.empty_nodes.appendleft(some_node.down)
+
+        if some_node.size[0] - size[0] > 0:
+            some_node.right = Node((some_node.location[0] + size[0], some_node.location[1]),
+                                   (some_node.size[0] - size[0], size[1]))
+
+            self.empty_nodes.appendleft(some_node.right)
 
         some_node.size = size
-
-        if some_node.down.size[0] > 0 and some_node.down.size[1] > 0:
-            self.empty_nodes.appendleft(some_node.down)
-        else:
-            some_node.used = True
-
-        if some_node.right.size[0] > 0 and some_node.right.size[1] > 0:
-            self.empty_nodes.appendleft(some_node.right)
-        else:
-            some_node.used = True
 
         return Block(some_node.location, size)
 
