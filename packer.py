@@ -6,13 +6,15 @@ class Packer:
         self.root = None
         self.recursive = False
         self.best_fit = True
+        # IDEA: keep nodes sorted by smallest, then first found fit will be best.
+        # This list grows a lot if max size is increased...  Why?
         self.empty_nodes = deque()
 
     def pack(self, rectangles):
         blocks = []
 
         for rectangle in rectangles:
-            if not self.root:
+            if self.root is None:
                 self.root = Node((0, 0), rectangles[0])
                 some_node = self.root
                 self.empty_nodes.append(self.root)
@@ -26,6 +28,13 @@ class Packer:
 
         return blocks
 
+    @staticmethod
+    def check_fit(a, size):
+        if size[1] <= a.size[1] and size[0] <= a.size[0]:
+            return True
+
+        return False
+
     def find_node(self, size):
         if self.recursive:
             return self.find_node_r(self.root, size)
@@ -33,7 +42,7 @@ class Packer:
             best_node = None
 
             for node in self.empty_nodes:
-                if not node.used and node.fits(size):
+                if self.check_fit(node, size) is True:
                     if not self.best_fit:
                         return node
 
@@ -130,7 +139,7 @@ class Node:
         self.size = size
 
     def fits(self, size):
-        if size[0] <= self.size[0] and size[1] <= self.size[1]:
+        if size[1] <= self.size[1] and size[0] <= self.size[0]:
             return True
         else:
             return False
