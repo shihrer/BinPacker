@@ -88,6 +88,12 @@ def naive_solution(rectangles):
 
 
 def find_solution(rectangles):
+    # Rotate
+    # for i, rectangle in enumerate(rectangles):
+    #     if rectangle[0] > rectangle[1]:
+    #         rectangles[i] = (rectangle[1], rectangle[0])
+
+    # Sort by height, then width
     rectangles.sort(key=operator.itemgetter(1, 0), reverse=True)
     return Packer.pack(Packer(), rectangles)
 
@@ -100,9 +106,8 @@ class SolutionBounds():
         return (self.dimensions[0] + self.dimensions[1]) * 2
 
 
-# Runs the code.
-if __name__ == "__main__":
-    generate_file(1, 100, 500)
+def run_random():
+    generate_file(1, 100, 10000)
     rectangles = read_file("random.txt")
 
     naive_results = naive_solution(rectangles)
@@ -113,16 +118,50 @@ if __name__ == "__main__":
 
     print("Solution ran in {} seconds".format(time_elapsed))
 
-    if not check_solution(my_results):
-        print("Solution invalid.  Overlap detected.")
+    # This is slow
+    # if not check_solution(my_results):
+    #     print("Solution invalid.  Overlap detected.")
 
     solution_space = find_perimeter(my_results)
     naive_space = find_perimeter(naive_results)
 
+    print("Dimensions of solution are {}.".format(solution_space.dimensions))
     print("Perimeter of solution is {}.".format(solution_space.get_perimeter()))
-    print("Permiter of naive solution is {}.".format(naive_space.get_perimeter()))
-    print("Pecentage improvement is {}.".format(
+    print("Dimensions of naive solution are {}.".format(naive_space.dimensions))
+    print("Perimeter of naive solution is {}.".format(naive_space.get_perimeter()))
+    print("Percentage improvement is {}.".format(
         (100 - (solution_space.get_perimeter() / naive_space.get_perimeter()) * 100)))
 
     visualizer = Visualize(my_results, solution_space)
     visualizer.display()
+
+
+def run_tests():
+    total_improvement = 0
+    file_count = 70
+    for i in range(1, file_count + 1):
+
+        rectangles = read_file("data/{}.in".format(i))
+        naive_results = naive_solution(rectangles)
+
+        start = time.time()
+        my_results = find_solution(rectangles)
+        time_elapsed = time.time() - start
+
+        # This is slow
+        # if not check_solution(my_results):
+        #     print("Solution invalid.  Overlap detected.")
+
+        solution_space = find_perimeter(my_results)
+        naive_space = find_perimeter(naive_results)
+        improvement = naive_space.get_perimeter() / solution_space.get_perimeter()
+
+        print("Test {} ran in {} seconds for improvement of {}.".format(i, time_elapsed, improvement))
+        total_improvement += improvement
+
+    print("Overall improvement is {}.".format(total_improvement/file_count))
+
+
+# Runs the code.
+if __name__ == "__main__":
+    run_tests()
