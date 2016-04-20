@@ -156,7 +156,7 @@ def run_tests():
         naive_space = find_perimeter(naive_results)
         improvement = naive_space.get_perimeter() / solution_space.get_perimeter()
 
-        print("Test {} ran in {} seconds for improvement of {}.".format(i, time_elapsed, improvement))
+        print("Test {} ran in {} seconds for improvement of {}.  {}".format(i, time_elapsed, improvement, solution_space.dimensions))
         total_improvement += improvement
 
     print("Overall improvement is {}.".format(total_improvement/file_count))
@@ -164,4 +164,4 @@ def run_tests():
 
 # Runs the code.
 if __name__ == "__main__":
-    run_tests()
+    run_random()
