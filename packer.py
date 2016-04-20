@@ -5,6 +5,7 @@ class Packer:
     def __init__(self):
         self.root = None
         self.recursive = False
+        self.best_fit = True
         self.empty_nodes = deque()
 
     def pack(self, rectangles):
@@ -29,17 +30,20 @@ class Packer:
         if self.recursive:
             return self.find_node_r(self.root, size)
         else:
-            best_fit = None
+            best_node = None
 
             for node in self.empty_nodes:
                 if not node.used and node.fits(size):
-                    if best_fit:
-                        if node.better_fit(best_fit, size):
-                            best_fit = node
-                    else:
-                        best_fit = node
+                    if not self.best_fit:
+                        return node
 
-            return best_fit
+                    if best_node:
+                        if node.better_fit(best_node, size):
+                            best_node = node
+                    else:
+                        best_node = node
+
+            return best_node
 
     def find_node_r(self, some_node, size):
         if some_node:
