@@ -107,7 +107,7 @@ class SolutionBounds():
 
 
 def run_random():
-    generate_file(1, 100, 10000)
+    # generate_file(1, 100, 10000)
     rectangles = read_file("random.txt")
 
     naive_results = naive_solution(rectangles)
@@ -133,7 +133,7 @@ def run_random():
         (100 - (solution_space.get_perimeter() / naive_space.get_perimeter()) * 100)))
 
     visualizer = Visualize(my_results, solution_space)
-    visualizer.display()
+    # visualizer.display()
 
 
 def run_tests():

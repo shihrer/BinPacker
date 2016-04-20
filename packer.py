@@ -34,7 +34,7 @@ class Packer:
             for node in self.empty_nodes:
                 if not node.used and node.fits(size):
                     if best_fit:
-                        if node.size[0] - size[0] < best_fit.size[0] - size[0] or node.size[1] - size[1] < best_fit.size[1] - size[1]:
+                        if node.better_fit(best_fit, size):
                             best_fit = node
                     else:
                         best_fit = node
@@ -68,7 +68,6 @@ class Packer:
             self.empty_nodes.appendleft(some_node.right)
 
         some_node.size = size
-
         return Block(some_node.location, size)
 
     def grow_node(self, size):
@@ -101,14 +100,7 @@ class Packer:
         if self.root.right.size[0] > 0 and self.root.right.size[1] > 0:
             self.empty_nodes.appendleft(self.root.right)
 
-        # return self.split_node(self.root.right, size)
-
-        some_node = self.find_node(size)
-
-        if some_node:
-            return self.split_node(some_node, size)
-
-        return None
+        return self.split_node(self.root.right, size)
 
     def grow_down(self, size):
         new_root = Node((0, 0), (self.root.size[0], self.root.size[1] + size[1]))
@@ -122,14 +114,7 @@ class Packer:
         if self.root.down.size[0] > 0 and self.root.down.size[1] > 0:
             self.empty_nodes.appendleft(self.root.down)
 
-        # return self.split_node(self.root.down, size)
-
-        some_node = self.find_node(size)
-
-        if some_node:
-            return self.split_node(some_node, size)
-
-        return None
+        return self.split_node(self.root.down, size)
 
 
 class Node:
@@ -145,6 +130,12 @@ class Node:
             return True
         else:
             return False
+
+    def better_fit(self, some_node, size):
+        if self.size[0] - size[0] < some_node.size[0] - size[0] or self.size[1] - size[1] < some_node.size[1] - size[1]:
+            return True
+
+        return False
 
 
 class Block:
