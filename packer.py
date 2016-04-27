@@ -28,13 +28,6 @@ class Packer:
 
         return blocks
 
-    @staticmethod
-    def check_fit(a, size):
-        if size[1] <= a.size[1] and size[0] <= a.size[0]:
-            return True
-
-        return False
-
     def find_node(self, size):
         if self.recursive:
             return self.find_node_r(self.root, size)
@@ -42,7 +35,7 @@ class Packer:
             best_node = None
 
             for node in self.empty_nodes:
-                if self.check_fit(node, size) is True:
+                if node.check_fit(size) is True:
                     if not self.best_fit:
                         return node
 
@@ -84,8 +77,9 @@ class Packer:
         return Block(some_node.location, size)
 
     def grow_node(self, size):
-        can_go_down = size[0] <= self.root.size[0]
-        can_go_right = size[1] <= self.root.size[1]
+        # Needs to handle really wide blocks better
+        can_go_down = size[0] <= self.root.size[0]      # check if rectangle width is less than root
+        can_go_right = size[1] <= self.root.size[1]     # check if rectangle height is less than root
 
         should_go_down = can_go_down and (self.root.size[0] >= (self.root.size[1] + size[1]))
         should_go_right = can_go_right and (self.root.size[1] >= (self.root.size[0] + size[0]))
@@ -139,16 +133,13 @@ class Node:
         self.size = size
 
     def fits(self, size):
-        if size[1] <= self.size[1] and size[0] <= self.size[0]:
-            return True
-        else:
-            return False
+        return size[1] <= self.size[1] and size[0] <= self.size[0]
+
+    def check_fit(self, size):
+        return size[1] <= self.size[1] and size[0] <= self.size[0]
 
     def better_fit(self, some_node, size):
-        if self.size[0] - size[0] < some_node.size[0] - size[0] or self.size[1] - size[1] < some_node.size[1] - size[1]:
-            return True
-
-        return False
+        return self.size[0] - size[0] < some_node.size[0] - size[0] or self.size[1] - size[1] < some_node.size[1] - size[1]
 
 
 class Block:
